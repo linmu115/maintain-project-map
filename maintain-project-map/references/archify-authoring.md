@@ -30,6 +30,8 @@ node_records 的键是图内原节点 ID，值是本地图记录 ID 数组。映
 
 ## 编写图源
 
+当图涉及组合项目、嵌套模块或对外扩展接口时，先应用[组合项目与扩展接口](composite-projects.md)的职责与接入判断。架构图用 boundaries 表达真实归属，流程图按参与者选用 lanes / groups；相关内部功能和接口必须可定位。只把插件各画成一个节点、把所有步骤放入“正常/异常”两行，不能算已说明这种项目的内部组织。
+
 选择实际需要的格式，按需读取[架构 schema](../assets/vendor/archify/schemas/architecture.schema.json)或[工作流 schema](../assets/vendor/archify/schemas/workflow.schema.json)及其[公共定义](../assets/vendor/archify/schemas/common.schema.json)。遇到复杂布局再查[上游编写约定](../assets/vendor/archify/references/authoring-contract.md)和邻近的 examples，不必一次读完全部资料。
 
 保留已有原生 ID 与合法的布局、边界、泳道、分组、条件、分支、回路、路径和引导视图。不要为了适配记录 ID 重命名图节点，也不要为了通过检查删除有意义的关系文字。新工作流通常使用 schema v2；旧图有固定坐标时，不只改版本号。关系来自已确认的设计或明确来源；位置接近、普通依赖和阅读顺序不证明流程先后或运行时影响。
