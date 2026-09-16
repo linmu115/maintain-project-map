@@ -133,17 +133,17 @@ class DiagramTests(unittest.TestCase):
         function = re.search(r"^function visible\(\).*", page, flags=re.M).group(0)
         records = [{"id": "OLD", "title": "旧入口", "aliases": ["分享卡片"], "status": "withdrawn", "kind": "module"}, {"id": "BROKEN", "title": "仍存在的模块", "status": "failed", "kind": "module"}, {"id": "EXP", "title": "失败探索", "kind": "exploration", "status": "current", "outcome": "failed"}]
         script = "const recordOrder=new Map();const records=" + json.dumps(records, ensure_ascii=False) + ";const historical=new Set(" + json.dumps(sorted(HISTORICAL)) + ");let state={history:false,verification:false,query:''};" + function + ";const current=visible().map(r=>r.id);state.query='分享卡片';const matched=visible().map(r=>r.id);process.stdout.write(JSON.stringify({current,matched}));"
-        result = subprocess.run([node, "-e", script], capture_output=True, text=True, encoding="utf-8", timeout=10, check=True)
+        result = subprocess.run([node, "-e", script], creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0), capture_output=True, text=True, encoding="utf-8", timeout=10, check=True)
         self.assertEqual(json.loads(result.stdout), {"current": ["BROKEN", "EXP"], "matched": ["OLD"]})
 
     def test_actual_reader_native_focus_and_embedding_behavior(self):
         node = find_node()
         test_file = Path(__file__).with_name('reader-native-behavior.cjs')
-        result = subprocess.run([node, str(test_file)], capture_output=True, timeout=10)
+        result = subprocess.run([node, str(test_file)], creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0), capture_output=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr.decode('utf-8'))
         page = (SCRIPTS.parent / 'assets/reader.html').read_text(encoding='utf-8')
         executable_script = page.split('<script>')[-1].split('</script>')[0]
-        result = subprocess.run([node, '--check'], input=executable_script.encode('utf-8'), capture_output=True, timeout=10)
+        result = subprocess.run([node, '--check'], input=executable_script.encode('utf-8'), creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0), capture_output=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr.decode('utf-8'))
 
     def test_no_declaration_never_adopts_derived_graph_or_invents_structure(self):

@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "协作系统 · 示例",
+    "locale": "zh-CN"
+  },
+  "components": [
+    {
+      "id": "core",
+      "type": "backend",
+      "label": "Reference Core",
+      "sublabel": "唯一的接口合同",
+      "pos": [
+        340,
+        60
+      ],
+      "size": [
+        190,
+        80
+      ]
+    },
+    {
+      "id": "board",
+      "type": "backend",
+      "label": "Note Board",
+      "sublabel": "笔记引用",
+      "pos": [
+        60,
+        300
+      ],
+      "size": [
+        190,
+        80
+      ]
+    },
+    {
+      "id": "graph",
+      "type": "backend",
+      "label": "Graph View",
+      "sublabel": "图节点引用",
+      "pos": [
+        620,
+        300
+      ],
+      "size": [
+        190,
+        80
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "board-core",
+      "from": "board",
+      "to": "core",
+      "label": "引用定位",
+      "fromSide": "top",
+      "toSide": "left"
+    },
+    {
+      "id": "graph-core",
+      "from": "graph",
+      "to": "core",
+      "label": "引用定位",
+      "fromSide": "top",
+      "toSide": "right"
+    },
+    {
+      "id": "board-graph",
+      "from": "board",
+      "to": "graph",
+      "label": "相互关联",
+      "fromSide": "right",
+      "toSide": "left"
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "明确收录的项目",
+      "wraps": [
+        "core",
+        "board",
+        "graph"
+      ]
+    }
+  ]
+}

@@ -108,6 +108,8 @@ def render_diagrams(data: dict, output_dir: Path, node: str | None = None, reade
     output_dir.mkdir(parents=True, exist_ok=True)
     specs = {}
     for kind in KINDS:
+        if data["project"].get("kind") == "system" and kind == "workflow":
+            continue
         source = data.get("diagram_sources", {}).get(kind)
         if source is None:
             specs[kind] = {"file": None, "missing": True,
@@ -143,9 +145,13 @@ def render_diagrams(data: dict, output_dir: Path, node: str | None = None, reade
                            str(snapshot), str(canonical), "--json"]
                 if source.get("repo_root") and kind == "architecture":
                     command.extend(["--repo-root", source["repo_root"]])
-                result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8",
+                environment = dict(os.environ, ARCHIFY_UPDATE_CHECK_DISABLED="1")
+                if os.name == "nt":
+                    preload = Path(__file__).with_name("hidden-processes.cjs").as_posix()
+                    environment["NODE_OPTIONS"] = (environment.get("NODE_OPTIONS", "") + ' --require="' + preload + '"').strip()
+                result = subprocess.run(command, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0), capture_output=True, text=True, encoding="utf-8",
                                         errors="replace", timeout=120,
-                                        env=dict(os.environ, ARCHIFY_UPDATE_CHECK_DISABLED="1"))
+                                        env=environment)
                 try:
                     native_receipt = json.loads(result.stdout)
                 except ValueError:
@@ -164,6 +170,7 @@ def render_diagrams(data: dict, output_dir: Path, node: str | None = None, reade
                     native_id: [{"id": record_id, "title": by_id[record_id]["title"], "status": by_id[record_id].get("status", "current")}
                                 for record_id in record_ids if record_id in by_id]
                     for native_id, record_ids in bindings.items()}}
+                passport["projects"] = data.get("system_view", {}).get("node_projects", {}) if kind == "architecture" else {}
                 encoded = json.dumps(passport, ensure_ascii=False).replace("<", "\\u003c").replace("&", "\\u0026")
                 bridge = (ASSETS / "diagram-records.js").read_text(encoding="utf-8")
                 extra = ('<script id="project-map-diagram-data" type="application/json">' + encoded + '</script>\n'

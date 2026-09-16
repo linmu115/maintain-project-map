@@ -26,14 +26,47 @@
     previousFocus = id;
     group.replaceChildren();
     const mappings = Object.hasOwn(config.nodes, id) ? config.nodes[id] : [];
-    group.hidden = !mappings.length;
-    if (!mappings.length) return;
+    const project = config.projects && Object.hasOwn(config.projects, id) ? config.projects[id] : null;
+    group.hidden = !mappings.length && !project;
+    if (group.hidden) return;
     const label = document.createElement('a');
     label.className = 'map-node-label';
     label.textContent = nodes.get(id)?.dataset.nodeLabel || id;
     label.href = '#focus=' + encodeURIComponent(id);
     label.addEventListener('click', event => { event.preventDefault(); center(id); });
     group.append(label);
+    if (project) {
+      const description = document.createElement('span');
+      description.className = 'map-project-description';
+      description.textContent = (project.role || project.name) + ' · ' + (project.open_status === 'ready' ? '地图可用' : '地图待处理');
+      group.append(description);
+      if (project.href && location.protocol !== 'file:') {
+        const enter = document.createElement('a');
+        enter.className = 'map-record-button map-enter-project';
+        enter.textContent = '进入项目 ↗';
+        enter.href = project.href;
+        enter.target = '_blank';
+        enter.rel = 'noopener noreferrer';
+        enter.setAttribute('aria-label', '进入项目：' + project.name + '（新标签页）');
+        enter.title = '在新标签页打开；浏览器阻止时可右键打开此链接。';
+        enter.addEventListener('click', event => {
+          if (event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+          event.preventDefault();
+          const opened = window.open(enter.href, '_blank');
+          if (opened) { try { opened.opener = null; } catch (_) {} }
+          else {
+            description.textContent = '浏览器未返回新标签页；请允许弹出标签页，或右键打开“进入项目”链接。';
+            Archify.focus.reposition();
+          }
+        });
+        group.append(enter);
+      } else {
+        const notice = document.createElement('span');
+        notice.className = 'map-project-description';
+        notice.textContent = location.protocol === 'file:' ? '请通过本地 HTTP 阅读链接进入项目。' : (project.reason || '目标地图尚不可用');
+        group.append(notice);
+      }
+    }
     for (const record of mappings) {
       const link = document.createElement('a');
       link.className = 'map-record-button';

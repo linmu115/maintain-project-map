@@ -6,6 +6,7 @@ import argparse
 from contextlib import contextmanager
 from http.client import HTTPException
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from html import escape
 import json
 import os
 from pathlib import Path
@@ -16,7 +17,7 @@ import sys
 import tempfile
 import threading
 import time
-from urllib.parse import unquote, urlsplit
+from urllib.parse import unquote, urlsplit, parse_qs
 from urllib.request import Request, ProxyHandler, build_opener
 
 SCHEMA = "project-map-preview/v1"
@@ -165,6 +166,7 @@ def run_server(entry, token):
     allowed = {entry.name, "architecture.html", "workflow.html", "docs.json",
                "architecture.native.html", "workflow.native.html"}
     state = {}
+    project_open_lock = threading.Lock()
 
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *_args):
@@ -209,6 +211,30 @@ def run_server(entry, token):
                 return
             if target == "__health":
                 self.send_bytes(200, json.dumps(state).encode(), "application/json")
+                return
+            if target == "__project":
+                if self.command == "HEAD":
+                    self.send_bytes(405, b"Open the project link with GET")
+                    return
+                try:
+                    from system_map import open_project_target
+                    values = parse_qs(urlsplit(self.path).query, max_num_fields=8)
+                    if set(values) - {"project", "diagram", "record", "node"} or any(len(v) != 1 for v in values.values()):
+                        raise ValueError("项目链接参数不明确")
+                    with project_open_lock:
+                        url = open_project_target(entry, values.get("project", [""])[0],
+                                                  **{k: values[k][0] for k in ("diagram", "record", "node") if k in values})
+                    self.send_response(302)
+                    self.send_header("Location", url)
+                    self.send_header("Cache-Control", "no-store")
+                    self.send_header("Content-Length", "0")
+                    self.end_headers()
+                except (OSError, ValueError, RuntimeError) as exc:
+                    page = ('<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>项目暂不可用</title>'
+                            '<style>body{font:16px/1.7 system-ui;max-width:680px;margin:12vh auto;padding:24px;color:#222}</style>'
+                            '<h1>暂时无法进入项目</h1><p>' + escape(str(exc)) + '</p>'
+                            '<p>系统地图仍保留在原标签页。请修复项目位置或图源后，从原页重新进入。</p></html>')
+                    self.send_bytes(409, page.encode("utf-8"), "text/html; charset=utf-8")
                 return
             if target == "":
                 target = entry.name

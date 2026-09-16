@@ -3,3 +3,5 @@ __pycache__/
 .pytest_cache/
 .venv/
 *.preview.json
+maintain-project-map/examples/**/views/
+docs/project/views/

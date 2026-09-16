@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Graph View · 示例",
+    "locale": "zh-CN"
+  },
+  "components": [
+    {
+      "id": "module",
+      "type": "backend",
+      "label": "阅读模块",
+      "sublabel": "Graph View · 示例",
+      "pos": [
+        90,
+        80
+      ],
+      "size": [
+        260,
+        90
+      ]
+    }
+  ],
+  "connections": []
+}

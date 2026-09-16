@@ -1,0 +1,624 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "项目维护地图：模块分工与接入",
+    "locale": "zh-CN",
+    "quality_profile": "standard",
+    "views": [
+      {
+        "id": "project-understanding",
+        "label": "维护与查询",
+        "focus": [
+          "project-documents",
+          "skill-guidance",
+          "project-location",
+          "map-records"
+        ],
+        "note": "模型按任务选用 Skill；项目身份和原记录支持维护、查询与剪枝，不要求先生成页面。"
+      },
+      {
+        "id": "native-diagrams",
+        "label": "Archify 与嵌入",
+        "focus": [
+          "native-diagram-sources",
+          "reader-orchestration",
+          "archify-adapter",
+          "archify-native",
+          "reading-shell"
+        ],
+        "note": "保留 Archify 原生图源与交付；嵌入层补上节点到记录的定位及固定视窗内的画布交互。"
+      },
+      {
+        "id": "document-navigation",
+        "label": "目录与互链",
+        "focus": [
+          "map-records",
+          "reader-orchestration",
+          "document-navigation",
+          "mistune-parser",
+          "reading-shell",
+          "local-preview"
+        ],
+        "note": "目录从记录文件夹生成；Mistune 解析 Markdown，项目适配层解析记录 ID、Wiki 链接和已声明资料。"
+      },
+      {
+        "id": "source-recovery",
+        "label": "查回会话依据",
+        "focus": [
+          "visible-session-messages",
+          "session-lookup"
+        ],
+        "note": "只查指定会话的可见消息；结果由模型核对后用于说明来源，不自动同步全历史。"
+      },
+      {
+        "id": "system-map",
+        "label": "系统地图",
+        "focus": [
+          "project-location",
+          "system-composition",
+          "reading-shell",
+          "local-preview"
+        ],
+        "note": "明确收录独立项目，聚合接口入口，通过护照新开项目阅读页；局部开发无需先读系统图。"
+      }
+    ],
+    "subtitle": "日常维护、按需阅读与复用依赖分别展开；边表示资料或能力交接，不表示固定执行顺序。"
+  },
+  "components": [
+    {
+      "id": "project-documents",
+      "type": "database",
+      "label": "项目权威文档",
+      "sublabel": "需求 · 对象 · 设计与实现",
+      "pos": [
+        70,
+        380
+      ],
+      "size": [
+        210,
+        86
+      ]
+    },
+    {
+      "id": "native-diagram-sources",
+      "type": "database",
+      "label": "原生结构与流程",
+      "sublabel": "明确登记的 Archify JSON",
+      "pos": [
+        70,
+        650
+      ],
+      "size": [
+        210,
+        86
+      ]
+    },
+    {
+      "id": "visible-session-messages",
+      "type": "database",
+      "label": "会话可见消息",
+      "sublabel": "用户指定的来源范围",
+      "pos": [
+        70,
+        920
+      ],
+      "size": [
+        210,
+        86
+      ]
+    },
+    {
+      "id": "map-records",
+      "type": "backend",
+      "label": "记录与关系引擎",
+      "sublabel": "绑定 · 查询 · 校验 · 剪枝",
+      "pos": [
+        450,
+        380
+      ],
+      "size": [
+        210,
+        86
+      ]
+    },
+    {
+      "id": "reader-orchestration",
+      "type": "backend",
+      "label": "阅读生成编排",
+      "sublabel": "只在需要页面时调用",
+      "pos": [
+        880,
+        110
+      ],
+      "size": [
+        210,
+        86
+      ]
+    },
+    {
+      "id": "session-lookup",
+      "type": "backend",
+      "label": "会话来源查找",
+      "sublabel": "指定文件 · 消息 ID · 分段原文",
+      "pos": [
+        450,
+        920
+      ],
+      "size": [
+        210,
+        86
+      ]
+    },
+    {
+      "id": "reading-shell",
+      "type": "frontend",
+      "label": "A / B 与更新记录",
+      "sublabel": "说明 · 迭代 · 返回",
+      "pos": [
+        1700,
+        380
+      ],
+      "size": [
+        210,
+        86
+      ]
+    },
+    {
+      "id": "archify-native",
+      "type": "backend",
+      "label": "Archify 原生核心",
+      "sublabel": "固定版本 · 校验 · 交付",
+      "pos": [
+        1280,
+        650
+      ],
+      "size": [
+        210,
+        86
+      ]
+    },
+    {
+      "id": "local-preview",
+      "type": "frontend",
+      "label": "本机 HTTP 阅读",
+      "sublabel": "快照服务 · 地址 · 生命周期",
+      "pos": [
+        1700,
+        920
+      ],
+      "size": [
+        210,
+        86
+      ]
+    },
+    {
+      "id": "skill-guidance",
+      "type": "backend",
+      "label": "按需维护指引",
+      "sublabel": "入口与条件参考文档",
+      "pos": [
+        450,
+        110
+      ],
+      "size": [
+        210,
+        86
+      ]
+    },
+    {
+      "id": "project-location",
+      "type": "backend",
+      "label": "项目身份与位置",
+      "sublabel": "稳定 ID · 本机登记表",
+      "pos": [
+        450,
+        650
+      ],
+      "size": [
+        210,
+        86
+      ]
+    },
+    {
+      "id": "document-navigation",
+      "type": "backend",
+      "label": "目录与文档互链",
+      "sublabel": "记录目录 · ID · 章节 · 来源",
+      "pos": [
+        880,
+        380
+      ],
+      "size": [
+        210,
+        86
+      ]
+    },
+    {
+      "id": "archify-adapter",
+      "type": "backend",
+      "label": "图源与画布适配",
+      "sublabel": "语义护照 · 定位 · 还原",
+      "pos": [
+        880,
+        650
+      ],
+      "size": [
+        210,
+        86
+      ]
+    },
+    {
+      "id": "mistune-parser",
+      "type": "backend",
+      "label": "Mistune 解析器",
+      "sublabel": "复用 Markdown 语法与插件",
+      "pos": [
+        1280,
+        380
+      ],
+      "size": [
+        210,
+        86
+      ]
+    },
+    {
+      "id": "system-composition",
+      "type": "backend",
+      "label": "系统地图组合",
+      "sublabel": "明确收录 · 接口与关系",
+      "pos": [
+        880,
+        920
+      ],
+      "size": [
+        210,
+        86
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "项目资产与指定来源",
+      "wraps": [
+        "project-documents",
+        "native-diagram-sources",
+        "visible-session-messages"
+      ],
+      "pad": 30
+    },
+    {
+      "kind": "region",
+      "label": "Skill：维护、定位与取证",
+      "wraps": [
+        "skill-guidance",
+        "map-records",
+        "project-location",
+        "session-lookup"
+      ],
+      "pad": 30
+    },
+    {
+      "kind": "region",
+      "label": "Skill：按需生成阅读页",
+      "wraps": [
+        "reader-orchestration",
+        "document-navigation",
+        "archify-adapter",
+        "system-composition"
+      ],
+      "pad": 30
+    },
+    {
+      "kind": "region",
+      "label": "第三方复用组件（外部）",
+      "wraps": [
+        "mistune-parser",
+        "archify-native"
+      ],
+      "pad": 30
+    },
+    {
+      "kind": "region",
+      "label": "Skill：人读页面与服务",
+      "wraps": [
+        "reading-shell",
+        "local-preview"
+      ],
+      "pad": 30
+    }
+  ],
+  "connections": [
+    {
+      "id": "documents-to-map",
+      "from": "project-documents",
+      "to": "map-records",
+      "label": "读取并按身份维护"
+    },
+    {
+      "id": "guidance-to-records",
+      "from": "skill-guidance",
+      "to": "map-records",
+      "label": "模型按任务选用",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        555,
+        280
+      ]
+    },
+    {
+      "id": "location-to-records",
+      "from": "project-location",
+      "to": "map-records",
+      "label": "解析地图位置",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "labelAt": [
+        555,
+        555
+      ]
+    },
+    {
+      "id": "map-to-orchestration",
+      "from": "map-records",
+      "to": "reader-orchestration",
+      "label": "记录快照与图源登记",
+      "fromSide": "right",
+      "toSide": "top",
+      "via": [
+        [
+          730,
+          423
+        ],
+        [
+          730,
+          40
+        ],
+        [
+          985,
+          40
+        ]
+      ],
+      "labelAt": [
+        790,
+        30
+      ]
+    },
+    {
+      "id": "map-to-reader",
+      "from": "reader-orchestration",
+      "to": "reading-shell",
+      "label": "交付共同的记录、关系与来源",
+      "fromSide": "right",
+      "toSide": "top",
+      "via": [
+        [
+          1805,
+          153
+        ]
+      ],
+      "labelAt": [
+        1450,
+        143
+      ]
+    },
+    {
+      "id": "orchestration-to-documents",
+      "from": "reader-orchestration",
+      "to": "document-navigation",
+      "label": "构建目录与链接",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        985,
+        280
+      ]
+    },
+    {
+      "id": "documents-to-parser",
+      "from": "document-navigation",
+      "to": "mistune-parser",
+      "label": "调用语法解析"
+    },
+    {
+      "id": "documents-to-shell",
+      "from": "document-navigation",
+      "to": "reading-shell",
+      "label": "正文、目录与链接目标",
+      "fromSide": "bottom",
+      "toSide": "left",
+      "via": [
+        [
+          985,
+          530
+        ],
+        [
+          1590,
+          530
+        ],
+        [
+          1590,
+          423
+        ]
+      ],
+      "labelAt": [
+        1300,
+        520
+      ]
+    },
+    {
+      "id": "native-source-to-orchestration",
+      "from": "native-diagram-sources",
+      "to": "archify-adapter",
+      "label": "读取登记的原始图源",
+      "fromSide": "bottom",
+      "toSide": "left",
+      "via": [
+        [
+          175,
+          810
+        ],
+        [
+          770,
+          810
+        ],
+        [
+          770,
+          693
+        ]
+      ],
+      "labelAt": [
+        650,
+        800
+      ]
+    },
+    {
+      "id": "orchestration-to-archify",
+      "from": "reader-orchestration",
+      "to": "archify-adapter",
+      "label": "按需生成并嵌入",
+      "fromSide": "left",
+      "toSide": "top",
+      "via": [
+        [
+          820,
+          153
+        ],
+        [
+          820,
+          570
+        ],
+        [
+          985,
+          570
+        ]
+      ],
+      "labelAt": [
+        820,
+        490
+      ]
+    },
+    {
+      "id": "adapter-to-native",
+      "from": "archify-adapter",
+      "to": "archify-native",
+      "label": "调用原生 deliver",
+      "variant": "emphasis"
+    },
+    {
+      "id": "archify-to-reader",
+      "from": "archify-adapter",
+      "to": "reading-shell",
+      "label": "原生结果经适配嵌入",
+      "fromSide": "bottom",
+      "toSide": "bottom",
+      "via": [
+        [
+          985,
+          845
+        ],
+        [
+          1805,
+          845
+        ]
+      ],
+      "labelAt": [
+        1420,
+        835
+      ]
+    },
+    {
+      "id": "reader-to-http",
+      "from": "reading-shell",
+      "to": "local-preview",
+      "label": "交付可打开的阅读快照",
+      "fromSide": "right",
+      "toSide": "right",
+      "via": [
+        [
+          2040,
+          423
+        ],
+        [
+          2040,
+          963
+        ]
+      ],
+      "labelAt": [
+        2040,
+        693
+      ]
+    },
+    {
+      "id": "messages-to-lookup",
+      "from": "visible-session-messages",
+      "to": "session-lookup",
+      "label": "按需定位原文"
+    },
+    {
+      "id": "locate-system-members",
+      "from": "project-location",
+      "to": "system-composition",
+      "label": "成员身份",
+      "fromSide": "right",
+      "toSide": "left",
+      "via": [
+        [
+          730,
+          693
+        ],
+        [
+          730,
+          963
+        ]
+      ]
+    },
+    {
+      "id": "open-member-project",
+      "from": "system-composition",
+      "to": "local-preview",
+      "label": "项目新标签页",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "system-reader",
+      "from": "system-composition",
+      "to": "reading-shell",
+      "label": "接口目录与护照",
+      "fromSide": "right",
+      "toSide": "left",
+      "via": [
+        [
+          1570,
+          963
+        ],
+        [
+          1570,
+          423
+        ]
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "一张项目地图",
+      "items": [
+        "Skill 分区表示自身职责；输入资料和第三方依赖分别标示，使用案例不自动成为内部成员。",
+        "模型从原记录查询，开发者从页面阅读；两者使用同一项目与条目 ID。"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "面向两类读者",
+      "items": [
+        "Archify 提供原生图模型、交付与图内能力；Mistune 提供 Markdown 解析。",
+        "Skill 补充地图组织、记录链接、嵌入与本机服务；图中节点可跳到对应模块或接口文档。"
+      ]
+    }
+  ]
+}

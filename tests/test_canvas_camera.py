@@ -37,7 +37,7 @@ class CanvasCameraTests(unittest.TestCase):
     def run_scenario(self, name: str):
         result = subprocess.run(
             [self.node, str(self.runner), name], input=self.payload,
-            capture_output=True, encoding="utf-8", timeout=20,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0), capture_output=True, encoding="utf-8", timeout=20,
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         receipt = json.loads(result.stdout)

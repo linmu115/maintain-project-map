@@ -11,6 +11,7 @@ const data={default_mode:'a'},defaultMode='a',state={mode:'a',focus:'first',pane
 const byId=new Map([['first',{status:'current',kind:'module'}],['旧 / #1',{status:'superseded',kind:'verification'}]]);
 const documents=new Map([['doc-contract',{}]]),revealRecord=()=>{};
 const historical=new Set(['superseded']),selected=()=>byId.get(state.focus);
+let isSystem=false;
 const location=globalThis.location={hash:'',pathname:'/map/'};
 let cursor=0;const entries=[{state:null,url:''}],events={};
 globalThis.addEventListener=(type,fn)=>events[type]=fn;
@@ -48,5 +49,10 @@ location.hash='#mode=b&record=first';readHash();assert.equal(state.document,'');
 byId.set('UPD-direct',{id:'UPD-direct',kind:'update',status:'current'});
 location.hash='#mode=b&record=UPD-direct';readHash();assert.equal(state.mode,'updates');assert.equal(state.update,'UPD-direct');
 location.hash='#mode=a&record=UPD-direct';readHash();assert.equal(state.mode,'a','Overview links must keep their selected mode');
+isSystem=true;
+location.hash='#mode=a&panel=workflow';readHash();assert.equal(state.panel,'architecture');
+location.hash='#mode=b&angle=workflow&record=first';readHash();assert.equal(state.angle,'architecture');
+location.hash='#mode=members';readHash();assert.equal(state.mode,'members');
+location.hash='#mode=b&angle=relations';readHash();assert.equal(state.angle,'relations');
 console.log('Reader history and deep links: PASS');
 `,sandbox,{timeout:5000});

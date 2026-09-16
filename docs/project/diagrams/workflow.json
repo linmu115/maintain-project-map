@@ -1,0 +1,269 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "按需导出：各模块怎样交付阅读页",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "read-with-diagrams",
+        "label": "带图阅读",
+        "focus": [
+          "load-project-map",
+          "prepare-document-navigation",
+          "choose-diagrams",
+          "native-delivery",
+          "compose-reading-page",
+          "serve-locally",
+          "read-project"
+        ],
+        "note": "只在需要阅读快照时运行。定位、文档适配、图交付、服务和浏览各由其模块负责，日常编码不必运行本流程。"
+      },
+      {
+        "id": "documents-still-readable",
+        "label": "没有图也能读文档",
+        "focus": [
+          "prepare-document-navigation",
+          "choose-diagrams",
+          "native-delivery",
+          "diagram-unavailable",
+          "compose-reading-page"
+        ],
+        "note": "不生成图或图源校验失败时，文档仍可阅读；失败图不引用旧版本冒充当前结果。"
+      }
+    ]
+  },
+  "lanes": [
+    {
+      "id": "project-assets",
+      "label": "记录引擎 · project_map"
+    },
+    {
+      "id": "reader-composition",
+      "label": "阅读编排 · render_map / reader_content"
+    },
+    {
+      "id": "native-graph",
+      "label": "图适配 · archify_adapter + Archify"
+    },
+    {
+      "id": "preview-service",
+      "label": "本机服务 · serve_map"
+    },
+    {
+      "id": "human-reading",
+      "label": "开发者 · 现有浏览器"
+    }
+  ],
+  "phases": [
+    {
+      "id": "prepare",
+      "label": "读取并组织内容",
+      "fromCol": 0,
+      "toCol": 1
+    },
+    {
+      "id": "create",
+      "label": "按需交付图与页面",
+      "fromCol": 2,
+      "toCol": 4,
+      "variant": "emphasis"
+    },
+    {
+      "id": "read",
+      "label": "本机打开",
+      "fromCol": 5,
+      "toCol": 5
+    }
+  ],
+  "mainPath": [
+    "load-project-map",
+    "prepare-document-navigation",
+    "choose-diagrams",
+    "native-delivery",
+    "compose-reading-page",
+    "serve-locally",
+    "read-project"
+  ],
+  "nodes": [
+    {
+      "id": "load-project-map",
+      "lane": "project-assets",
+      "col": 0,
+      "type": "database",
+      "label": "读取项目地图",
+      "sublabel": "文档与身份",
+      "width": 152
+    },
+    {
+      "id": "prepare-document-navigation",
+      "lane": "reader-composition",
+      "col": 1,
+      "type": "backend",
+      "label": "整理目录与正文链接",
+      "sublabel": "模块树 · Wiki · 章节来源",
+      "width": 180
+    },
+    {
+      "id": "choose-diagrams",
+      "lane": "reader-composition",
+      "col": 2,
+      "type": "backend",
+      "label": "按需生成图",
+      "sublabel": "明确登记的图源",
+      "width": 152
+    },
+    {
+      "id": "native-delivery",
+      "lane": "native-graph",
+      "col": 3,
+      "type": "backend",
+      "label": "原生校验交付",
+      "sublabel": "Archify deliver",
+      "width": 152
+    },
+    {
+      "id": "diagram-unavailable",
+      "lane": "native-graph",
+      "col": 4,
+      "type": "external",
+      "label": "图不可用",
+      "sublabel": "保留文档阅读",
+      "width": 152
+    },
+    {
+      "id": "compose-reading-page",
+      "lane": "reader-composition",
+      "col": 4,
+      "type": "frontend",
+      "label": "合成阅读页面",
+      "sublabel": "A / B 适配",
+      "width": 152
+    },
+    {
+      "id": "serve-locally",
+      "lane": "preview-service",
+      "col": 5,
+      "type": "backend",
+      "label": "本机预览",
+      "sublabel": "启动或复用服务",
+      "width": 152
+    },
+    {
+      "id": "read-project",
+      "lane": "human-reading",
+      "col": 5,
+      "type": "external",
+      "label": "打开项目地图",
+      "sublabel": "HTTP 阅读链接",
+      "width": 152
+    }
+  ],
+  "edges": [
+    {
+      "id": "load-to-choice",
+      "from": "load-project-map",
+      "to": "prepare-document-navigation"
+    },
+    {
+      "id": "documents-to-choice",
+      "from": "prepare-document-navigation",
+      "to": "choose-diagrams",
+      "label": "保留记录身份"
+    },
+    {
+      "id": "choice-to-native",
+      "from": "choose-diagrams",
+      "to": "native-delivery",
+      "label": "已登记图源",
+      "variant": "emphasis"
+    },
+    {
+      "id": "choice-without-diagrams",
+      "from": "choose-diagrams",
+      "to": "compose-reading-page",
+      "label": "不生成图",
+      "variant": "dashed",
+      "role": "branch"
+    },
+    {
+      "id": "native-to-page",
+      "from": "native-delivery",
+      "to": "compose-reading-page",
+      "label": "校验通过",
+      "variant": "emphasis"
+    },
+    {
+      "id": "native-failure",
+      "from": "native-delivery",
+      "to": "diagram-unavailable",
+      "label": "校验失败",
+      "variant": "dashed",
+      "role": "error"
+    },
+    {
+      "id": "failure-to-documents",
+      "from": "diagram-unavailable",
+      "to": "compose-reading-page",
+      "label": "标明图缺失",
+      "variant": "dashed"
+    },
+    {
+      "id": "page-to-service",
+      "from": "compose-reading-page",
+      "to": "serve-locally"
+    },
+    {
+      "id": "service-to-reading",
+      "from": "serve-locally",
+      "to": "read-project"
+    }
+  ],
+  "semanticChecks": {
+    "allowedRoots": [
+      "load-project-map"
+    ],
+    "allowedTerminals": [
+      "read-project"
+    ],
+    "requiredEdges": [
+      {
+        "from": "native-delivery",
+        "to": "compose-reading-page"
+      }
+    ],
+    "requiredPaths": [
+      {
+        "from": "load-project-map",
+        "to": "read-project"
+      },
+      {
+        "from": "diagram-unavailable",
+        "to": "read-project"
+      },
+      {
+        "from": "prepare-document-navigation",
+        "to": "read-project"
+      }
+    ]
+  },
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "原生内容与阅读适配",
+      "items": [
+        "目录由记录文件夹形成；Markdown/Wiki 链接解析到记录、章节或已声明资料。",
+        "Archify 交付图后与文档一起组成快照；记录改变后需重新导出，服务不自动同步源码。"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "明确的范围",
+      "items": [
+        "此图展示默认 HTTP 交付；离线 HTML 是可选导出方式。",
+        "提问继续在会话中进行，阅读页面不调用模型。"
+      ]
+    }
+  ]
+}

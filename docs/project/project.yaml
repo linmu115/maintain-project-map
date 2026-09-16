@@ -1,0 +1,166 @@
+schema: project-map/v1
+project_id: 2c64630e-7c8f-465f-97b9-ef6e5916c8aa
+name: 项目维护地图 Skill
+kind: skill
+map: map.md
+views:
+  workflow_title: 生成项目阅读页面（按需）
+sources:
+- source_id: design
+  path: ../../设计方案.md
+  format: markdown
+bindings:
+- id: REQ-map
+  kind: requirement
+  title: 一个项目对应一张地图
+  source_id: design
+  heading: 3. 一个项目对应什么资产
+  status: current
+  summary: 以项目 ID 维持长期身份，文件、工作树和两种阅读方式共享同一地图身份。
+- id: REQ-assets
+  kind: requirement
+  title: 项目说明、对象与独立实现证据
+  source_id: design
+  heading: 4. 资产如何组织
+  status: current
+  summary: 项目说明包含能力、对象、设计与交互；实现和验证分开保存，复用已有文档。
+  sources:
+  - path: ../../maintain-project-map/references/reading-and-interaction.md
+    role: original-design-reference
+- id: REQ-relations
+  kind: requirement
+  title: 轻量跨项目关系
+  source_id: design
+  heading: 5. 需要保存的关系
+  status: current
+  summary: 外部关系用目标 ID 与必要说明定位，关系不自动变成全局网络。
+- id: REQ-maintenance
+  kind: requirement
+  title: 维护、修订与剪枝
+  source_id: design
+  heading: 6. 工作中的维护方式
+  status: current
+  aliases:
+  - 退役
+  - 历史
+  - 失败探索
+  summary: 随有意义的变更更新，保留提议与当前决定的区别，退役功能与失败探索分别处理。
+  sources:
+  - path: ../../maintain-project-map/references/lifecycle.md
+    role: original-design-reference
+- id: REQ-cost
+  kind: requirement
+  title: 控制模型维护成本
+  source_id: design
+  heading: 7. 如何避免 Skill 拖累模型
+  status: current
+  summary: 短入口、按需读取与生成，不用全图加载或固定流程替代模型判断。
+  sources:
+  - path: ../../maintain-project-map/references/evaluation.md
+    role: original-design-reference
+  - path: ../../research/cost-and-benefit.md
+    role: original-design-reference
+  - path: ../../research/first-build-check.md
+    role: original-design-reference
+- id: REQ-source
+  kind: requirement
+  title: 精确查回长会话来源
+  source_id: design
+  heading: 8. 长会话中段如何找到
+  status: current
+  summary: 根据任务与消息身份找到必要原文，核对后续修订及读取范围。
+archify:
+  architecture:
+    source: diagrams/architecture.json
+    node_records:
+      project-documents:
+      - REQ-assets
+      - IF-record-data
+      - OBJ-evidence
+      native-diagram-sources:
+      - IF-native-diagram
+      - REQ-native-archify
+      visible-session-messages:
+      - IF-visible-session
+      - OBJ-evidence
+      map-records:
+      - MOD-records
+      - IF-record-data
+      - IF-map-query
+      system-composition:
+      - MOD-system
+      - IF-system-composition
+      - REQ-system-map
+      - IMP-system-map
+      reader-orchestration:
+      - MOD-reader
+      - DEC-on-demand
+      session-lookup:
+      - MOD-session
+      - IF-visible-session
+      reading-shell:
+      - MOD-reader
+      - REQ-reader-layout
+      - REQ-canvas-reader
+      - IMP-reader-navigation
+      - MOD-updates
+      - IF-update-record
+      - IMP-passport-updates-history
+      archify-native:
+      - MOD-archify
+      - REQ-native-archify
+      local-preview:
+      - MOD-http
+      - IF-http-preview
+      skill-guidance:
+      - MOD-guidance
+      - IF-skill-use
+      - DEC-on-demand
+      - REQ-composite-structure
+      - IMP-composite-guidance
+      project-location:
+      - MOD-locate
+      - IF-project-location
+      - OBJ-map-identity
+      document-navigation:
+      - MOD-document-navigation
+      - IF-document-links
+      archify-adapter:
+      - MOD-archify
+      - IF-native-diagram
+      - REQ-canvas-reader
+      - IMP-passport-updates-history
+      mistune-parser:
+      - MOD-document-navigation
+      - IF-document-links
+  workflow:
+    source: diagrams/workflow.json
+    node_records:
+      load-project-map:
+      - MOD-records
+      - IF-record-data
+      - MOD-locate
+      prepare-document-navigation:
+      - MOD-document-navigation
+      - IF-document-links
+      choose-diagrams:
+      - MOD-reader
+      - IF-native-diagram
+      - DEC-on-demand
+      native-delivery:
+      - MOD-archify
+      - IF-native-diagram
+      diagram-unavailable:
+      - MOD-archify
+      - IF-native-diagram
+      compose-reading-page:
+      - MOD-reader
+      - IF-document-links
+      - REQ-reader-layout
+      serve-locally:
+      - MOD-http
+      - IF-http-preview
+      read-project:
+      - MOD-reader
+      - IF-http-preview
+      - REQ-canvas-reader

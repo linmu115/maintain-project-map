@@ -17,6 +17,7 @@ const el=(tag,cls,text)=>new Elem(tag,cls,text),add=(p,...cs)=>{p.append(...cs.f
 const button=(text,fn)=>{const e=el('button','',text);e.addEventListener('click',fn);return e;};
 const ProjectMapCanvas={mount:frame=>{const stage=el('div','canvas-stage');stage.append(frame);return stage;}};
 const state={node:''},frames=new Map(),restoringSnapshot=null;
+let isSystem=false;
 const navigate=()=>{},historical=new Set(['retired']),statusNames={retired:'已退役'};
 const byId=new Map([['R1',{id:'R1',title:'Record 1'}],['R2',{id:'R2',title:'Record 2'}]]);
 const data={diagrams:{architecture:{file:'architecture.html',canonical_file:'architecture.native.html',title:'Native graph',nodes:[{id:'source-native',label:'Source',record_ids:['R1','R2']},{id:'sink-native',label:'Sink',record_ids:['R1']}],record_nodes:{R1:['source-native','sink-native']},warnings:[{code:'test',message:'Mapping warning'}],source_path:'diagrams/architecture.json',source_sha256:'hash'}}};
@@ -24,6 +25,10 @@ const flatten=e=>[e,...e.children.flatMap(flatten)];
 `;
 const checks = String.raw`
 let view=diagram('architecture');
+assert.equal(flatten(view).find(e=>e.tag==='iframe').attrs.sandbox,'allow-scripts allow-downloads');
+isSystem=true;
+assert.ok(flatten(diagram('architecture')).find(e=>e.tag==='iframe').attrs.sandbox.includes('allow-popups-to-escape-sandbox'));
+isSystem=false;
 assert.equal(flatten(view).find(e=>e.tag==='iframe').src,'architecture.html?canvas=1');
 assert.equal(flatten(view).filter(e=>e.tag==='a'&&e.href==='architecture.native.html').length,1);
 view=diagram('architecture','R1');

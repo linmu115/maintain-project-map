@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """A small, live-file project-map reader and bounded command-line interface.
 
-No service, database, repository scan, Git writes, or external-map traversal.
+No service, database, repository scan, Git writes, or implicit external traversal.
+System queries summarize explicitly collected maps only when requested.
 The public load_project() result is the common input to human reading views.
 """
 from __future__ import annotations
@@ -306,7 +307,7 @@ def _record(meta: dict, body: str, path: Path, line: int, end: int, owned: bool,
 def _git_version(base: Path, files: list[Path] | None = None, *, include_dirty: bool = True) -> dict:
     def git(*args: str) -> str | None:
         try:
-            p = subprocess.run(["git", "-C", str(base), *args], text=True, encoding="utf-8", errors="replace", capture_output=True, timeout=8, check=False)
+            p = subprocess.run(["git", "-C", str(base), *args], creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0), text=True, encoding="utf-8", errors="replace", capture_output=True, timeout=8, check=False)
             return p.stdout.strip() if p.returncode == 0 else None
         except (OSError, subprocess.TimeoutExpired):
             return None
@@ -583,6 +584,10 @@ def load_project(manifest_path: str | Path) -> dict:
               "source_files": file_digests, "diagram_sources": diagram_sources}
     result["validation"] = _validation(result)
     result["validation"]["warnings"].extend(diagram_warnings)
+    if project.get("kind") == "system":
+        from system_map import validate_system
+        result["validation"]["errors"].extend(validate_system(result))
+        result["validation"]["valid"] = not result["validation"]["errors"]
     return result
 
 
@@ -757,12 +762,14 @@ def _brief(record: dict) -> dict:
     return result
 
 
-def search_project(doc: dict, query: str, limit: int = 8, current_only: bool = False) -> dict:
+def search_project(doc: dict, query: str, limit: int = 8, current_only: bool = False, module: str | None = None) -> dict:
     q = query.casefold().strip()
     if not q:
         raise MapError("Search needs a nonempty query")
     matches = []
-    for r in doc["records"]:
+    from system_map import module_records
+    candidates, _ = module_records(doc, module)
+    for r in candidates:
         if current_only and r["status"] in HISTORICAL:
             continue
         fields = {"id": r["id"], "title": r["title"], "aliases": "\n".join(r["aliases"]), "summary": str(r["summary"]), "body": r["body"]}
@@ -773,15 +780,19 @@ def search_project(doc: dict, query: str, limit: int = 8, current_only: bool = F
             priority = 0 if q == r["id"].casefold() else 1 if "aliases" in reasons or "title" in reasons else 2
             matches.append((priority, {**_brief(r), "matched_fields": reasons}))
     matches.sort(key=lambda p: (p[0], p[1]["id"]))
-    return {"project_id": doc["project"]["project_id"], "query": query, "scope": "current" if current_only else "current_and_historical",
+    return {"project_id": doc["project"]["project_id"], "query": query, "scope": "current" if current_only else "current_and_historical", "module_id": module,
             "results": [r for _, r in matches[:limit]], "total": len(matches), "truncated": len(matches) > limit,
-            "fingerprint": doc["fingerprint"]}
+            "fingerprint": doc["fingerprint"], "coverage": "Candidates only; bodies and constraints have not been opened. Use read on relevant IDs, or refine the query when truncated."}
 
 
-def read_record(doc: dict, record_id: str, *, offset: int = 0, max_chars: int = 6000, max_lines: int = 120, expected_fingerprint: str | None = None) -> dict:
+def read_record(doc: dict, record_id: str, *, offset: int = 0, max_chars: int = 6000, max_lines: int = 120, expected_fingerprint: str | None = None, expected_record_fingerprint: str | None = None) -> dict:
     if expected_fingerprint is not None and expected_fingerprint != doc["fingerprint"]:
         raise MapError("Project sources changed after the previous read; locate the record again before continuing by offset")
     r = _find(doc, record_id)
+    from system_map import record_fingerprint
+    record_digest = record_fingerprint(r)
+    if expected_record_fingerprint is not None and expected_record_fingerprint != record_digest:
+        raise MapError("Record or its source changed; locate the record again before continuing")
     body = r["body"]
     if offset < 0 or offset > len(body) or max_chars < 1 or max_lines < 1:
         raise MapError("Read offset must be within the body and limits must be positive")
@@ -799,7 +810,9 @@ def read_record(doc: dict, record_id: str, *, offset: int = 0, max_chars: int = 
     return {"project_id": doc["project"]["project_id"], "record": metadata, "body": text,
             "receipt": "opened_partial" if truncated or offset else "opened_full", "offset_unit": "unicode_code_points",
             "offset": offset, "end_offset": end, "total_chars": len(body), "source_lines": span,
-            "truncated": truncated, "continuation": {"record_id": record_id, "offset": end, "fingerprint": doc["fingerprint"]} if truncated else None,
+            "truncated": truncated, "record_fingerprint": record_digest,
+            "coverage": "Partial body; unread constraints may remain. Continue reading before claiming full coverage." if truncated or offset else "Complete body of this record only; related records and source code are not implied to have been read.",
+            "continuation": {"record_id": record_id, "offset": end, "fingerprint": doc["fingerprint"], "record_fingerprint": record_digest} if truncated else None,
             "fingerprint": doc["fingerprint"], "version": doc["version"]}
 
 
@@ -867,16 +880,32 @@ def cli(argv: list[str] | None = None) -> int:
     p = sub.add_parser("resolve"); p.add_argument("project_id"); p.add_argument("--registry"); p.add_argument("--manifest"); p.add_argument("--current")
     p = sub.add_parser("discover", help="Find the nearest map using conventional paths, without a recursive scan")
     p.add_argument("path", nargs="?", default="."); p.add_argument("--stop", help="Inclusive workspace/project boundary")
+    for cmd in ("members", "interfaces", "impact", "modules"):
+        descriptions = {"members": "List explicitly collected projects and resolution gaps", "interfaces": "Find canonical contracts and known consumers without loading their bodies", "impact": "List declared relations touching a project or record; not inferred runtime impact", "modules": "List module IDs for scoped search"}
+        examples = {"members": "members SYSTEM --limit 5 --offset 5", "interfaces": "interfaces SYSTEM --query Adapter --limit 5", "impact": "impact SYSTEM IF-example --project PROVIDER-ID", "modules": "modules PROJECT --limit 8"}
+        p = sub.add_parser(cmd, help=descriptions[cmd], description=descriptions[cmd], epilog="Example: project_map.py " + examples[cmd])
+        p.add_argument("path", help="Project or system manifest/directory")
+        p.add_argument("--limit", type=_positive, default=8)
+        p.add_argument("--offset", type=int, default=0)
+        p.add_argument("--registry", help="Optional local project registry")
+        if cmd in {"interfaces", "impact"}:
+            p.add_argument("--project", help="Owner project ID; never a guessed name")
+        if cmd == "interfaces":
+            p.add_argument("--query", default="", help="Substring in interface name, ID or summary")
+        if cmd == "impact":
+            p.add_argument("record_id", nargs="?", help="Omit to query relations for the project")
     for cmd in ("search", "read", "related", "validate", "retire", "merge", "export"):
         p = sub.add_parser(cmd)
         p.add_argument("path", help="Project directory or project.yaml")
         if cmd == "search":
             p.add_argument("query"); p.add_argument("--limit", type=_positive, default=8); p.add_argument("--current-only", action="store_true")
+            p.add_argument("--module", help="Stable module record ID; locate with modules")
         if cmd in {"read", "related", "retire", "merge"}:
             p.add_argument("record_id")
         if cmd == "read":
             p.add_argument("--offset", type=int, default=0); p.add_argument("--max-chars", type=_positive, default=6000); p.add_argument("--max-lines", type=_positive, default=120)
             p.add_argument("--fingerprint", help="Require the previous read's fingerprint when continuing by offset")
+            p.add_argument("--record-fingerprint", help="Check only this record/source; unrelated map edits may continue")
         if cmd == "related":
             p.add_argument("--limit", type=_positive, default=30)
         if cmd in {"retire", "merge"}:
@@ -901,9 +930,16 @@ def cli(argv: list[str] | None = None) -> int:
         else:
             doc = load_project(args.path)
             if args.command == "search":
-                result = search_project(doc, args.query, args.limit, args.current_only)
+                result = search_project(doc, args.query, args.limit, args.current_only, args.module)
             elif args.command == "read":
-                result = read_record(doc, args.record_id, offset=args.offset, max_chars=args.max_chars, max_lines=args.max_lines, expected_fingerprint=args.fingerprint)
+                result = read_record(doc, args.record_id, offset=args.offset, max_chars=args.max_chars, max_lines=args.max_lines, expected_fingerprint=args.fingerprint, expected_record_fingerprint=args.record_fingerprint)
+            elif args.command in {"members", "interfaces", "impact", "modules"}:
+                from system_map import query_system, module_records, page
+                if args.command == "modules":
+                    _, scopes = module_records(doc)
+                    result = {**page([_brief(r) for r in doc['records'] if r['kind'] == 'module'], args.limit, args.offset), "scope": "Module records; explicit module_id or nearest module overview owns records"}
+                else:
+                    result = query_system(doc, args.command, registry=args.registry, limit=args.limit, offset=args.offset, project=getattr(args, 'project', None), query=getattr(args, 'query', ''), record=getattr(args, 'record_id', None))
             elif args.command == "related":
                 result = related_records(doc, args.record_id, limit=args.limit)
             elif args.command == "validate":
@@ -919,7 +955,7 @@ def cli(argv: list[str] | None = None) -> int:
                 result = {"output": str(output), "record_count": len(doc["records"]), "fingerprint": doc["fingerprint"], "valid": doc["validation"]["valid"]}
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return code
-    except (MapError, OSError) as exc:
+    except (ValueError, OSError) as exc:
         print(json.dumps({"error": str(exc)}, ensure_ascii=False), file=sys.stderr)
         return 2
 

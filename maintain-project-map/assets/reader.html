@@ -13,6 +13,8 @@
 <script>
 (()=>{'use strict';
 const data=JSON.parse(document.getElementById('project-data').textContent), records=data.records||[], byId=new Map(records.map(r=>[r.id,r]));
+const isSystem=data.project.kind==='system';
+document.title=(data.project.name||'项目地图')+' · '+(isSystem?'系统地图':'项目地图');
 const documents=new Map((data.linked_documents||[]).map(d=>[d.id,d]));
 const navigation=data.navigation||records.map(r=>({record_id:r.id,title:r.title})),treeOpen=new Map();
 function orderedIds(nodes){return nodes.flatMap(n=>n.record_id?[n.record_id]:orderedIds(n.children||[]));}
@@ -61,8 +63,8 @@ function recordDirectory(available,onSelect){
 function sidebar(items,title='当前项目',tree=null){
  const s=el('aside','sidebar');s.id='project-sidebar';s.setAttribute('aria-label','项目导航');
  const modes=el('nav','modes');modes.setAttribute('aria-label','阅读方式');
- for(const [mode,label,icon] of [['a','项目概览','overview'],['b','项目条目','records'],['updates','更新记录','updates']]){const b=button('',()=>{state.mode=mode;state.document='';state.anchor='';state.node='';state.update='';state.query='';render();closeNavigation();},'mode-button');b.dataset.mode=mode;b.setAttribute('aria-pressed',String(state.mode===mode));add(b,el('span','mode-icon '+icon),el('span','',label));b.firstChild.setAttribute('aria-hidden','true');modes.append(b);}
- add(s,modes,toolbar());const directory=el('div','sidebar-scroll');directory.append(el('h2','',title));for(const [label,active,fn] of items)directory.append(navItem(label,active,fn));if(tree)directory.append(recordDirectory(tree.records,tree.select));s.append(directory);s.append(el('div','sidebar-foot','项目地图 · 只读'));return s;
+ for(const [mode,label,icon] of (isSystem?[['a','系统概览','overview'],['b','接口与关联','records'],['members','收录项目','overview'],['updates','更新记录','updates']]:[['a','项目概览','overview'],['b','项目条目','records'],['updates','更新记录','updates']])){const b=button('',()=>{state.mode=mode;state.document='';state.anchor='';state.node='';state.update='';state.query='';if(isSystem&&mode==='b')state.angle='interfaces';render();closeNavigation();},'mode-button');b.dataset.mode=mode;b.setAttribute('aria-pressed',String(state.mode===mode));add(b,el('span','mode-icon '+icon),el('span','',label));b.firstChild.setAttribute('aria-hidden','true');modes.append(b);}
+ add(s,modes,toolbar());const directory=el('div','sidebar-scroll');directory.append(el('h2','',title));for(const [label,active,fn] of items)directory.append(navItem(label,active,fn));if(tree)directory.append(recordDirectory(tree.records,tree.select));s.append(directory);s.append(el('div','sidebar-foot',(isSystem?'系统地图':'项目地图')+' · 只读'));return s;
 }
 function heading(title,subtitle,eyebrow){const h=el('div','page-heading');if(eyebrow)h.append(el('div','eyebrow',eyebrow));add(h,el('h1','',title));if(subtitle)h.append(el('p','lede',subtitle));return h;}
 function tabs(items){const t=el('nav','tabs');t.setAttribute('aria-label','内容视角');for(const [label,active,fn] of items){const b=button(label,fn);b.setAttribute('aria-pressed',String(active));t.append(b);}return t;}
@@ -77,7 +79,7 @@ function diagram(type,focus=''){
   const nodes=graphNodes(spec,focus);
   if(focus&&!nodes.length){const empty=el('section','empty chart-empty');add(empty,el('p','','这条记录尚未关联此图中的节点。'),graphLink('查看整体图',spec.file),graphNotices(spec),graphSource(spec));return empty;}
   const box=el('section','chart'),bar=el('div','chart-bar'),link=graphLink('打开完整图',spec.file);add(bar,el('span','',spec.title||'项目关系'),link);box.append(bar);
-  const frame=el('iframe');frame.title=spec.title||type;frame.loading='lazy';frame.setAttribute('sandbox','allow-scripts allow-downloads');
+  const frame=el('iframe');frame.title=spec.title||type;frame.loading='lazy';frame.setAttribute('sandbox',isSystem?'allow-scripts allow-downloads allow-popups allow-popups-to-escape-sandbox':'allow-scripts allow-downloads');
   let active=state.node|| (focus?nodes[0].id:'');const status=el('span','meta');
   const showNode=id=>{active=id;frame.dataset.targetNode=id;if(!frame.src)frame.src=graphHref(spec.file);const entry=frames.get(frame);if(entry?.ready)frame.contentWindow.postMessage({channel:'project-map/v1',type:'focus-node',node:id},'*');link.href=graphHref(spec.file,id);const n=nodes.find(item=>item.id===id);status.textContent=n?'当前聚焦：'+(n.label||n.id)+' · '+n.id:'当前显示整体图。';};
   if(focus){const controls=el('div','chart-controls');if(nodes.length>1){const label=el('label','','此记录对应 '+nodes.length+' 个图节点 '),select=el('select');select.setAttribute('aria-label','选择此记录关联的图节点');for(const node of nodes){const option=el('option','',(node.label||node.id)+' · '+node.id);option.value=node.id;select.append(option);}select.value=active;select.addEventListener('change',()=>showNode(select.value));label.append(select);controls.append(label);}controls.append(status);box.append(controls);}
@@ -122,10 +124,12 @@ function writeHash(){const p=new URLSearchParams({mode:state.mode,record:state.d
 function readHash(){
  const hash=new URLSearchParams(location.hash.slice(1)),modeFallback=hash.has('mode')&&(byId.has(hash.get('record'))||documents.has(hash.get('document')))?'b':defaultMode;
  for(const [key,allowed,fallback] of [['mode',['a','b','updates'],modeFallback],['panel',['spec','architecture','workflow'],'spec'],['angle',['explain','architecture','workflow'],'explain'],['tab',['current','progress','gaps'],'current']])state[key]=allowed.includes(hash.get(key))?hash.get(key):fallback;
+ if(isSystem){if(hash.get('mode')==='members')state.mode='members';if(state.panel==='workflow')state.panel='architecture';if(state.angle==='workflow')state.angle='architecture';if(['interfaces','relations'].includes(hash.get('angle')))state.angle=hash.get('angle');else if(state.mode==='b'&&!hash.get('record'))state.angle='interfaces';}
  state.document=documents.has(hash.get('document'))?hash.get('document'):'';state.documentRecord=state.document&&byId.has(hash.get('record'))?hash.get('record'):'';
  state.anchor=hash.get('anchor')||'';state.node=hash.get('node')||'';state.update=hash.get('update')||'';state.query=hash.get('q')||'';state.history=hash.get('history')==='1';state.verification=hash.get('verification')==='1';
  if(byId.has(hash.get('record'))){state.focus=hash.get('record');const r=selected();if(historical.has(r.status))state.history=true;if(r.kind==='verification')state.verification=true;if(state.mode==='b'&&!state.document&&r.kind==='update'){state.mode='updates';state.update=r.id;}revealRecord(r.id);}
 }
+/*__PROJECT_MAP_SYSTEM_READER__*/
 function capturePage(){
  const diagrams={};for(const [frame,entry] of frames)diagrams[entry.type]={snapshot:entry.snapshot,active:entry.stage.dataset.canvasActive==='true'};
  return {state:displayedState,main:root.querySelector('main')?.scrollTop||0,sidebar:root.querySelector('.sidebar-scroll')?.scrollTop||0,
@@ -141,19 +145,21 @@ const pageHistory=ProjectMapHistory.create(data.project.project_id+location.path
 function renderContent(){
  pageHistory.save();ProjectMapCanvas.reset();
  const sameMode=root.dataset.mode===state.mode,previousFocus=root.dataset.focus,sidebarTop=sameMode?(root.querySelector('.sidebar-scroll')?.scrollTop||0):0;
- frames.clear();root.replaceChildren(state.mode==='a'?viewA():state.mode==='updates'?viewUpdates():viewB());
+ frames.clear();root.replaceChildren(state.mode==='updates'?viewUpdates():isSystem?viewSystem():state.mode==='a'?viewA():viewB());
  const main=root.querySelector('main');if(main){main.id='main-content';main.tabIndex=-1;}
  root.dataset.mode=state.mode;root.dataset.focus=state.focus;
  const side=root.querySelector('.sidebar-scroll');if(side)side.scrollTop=restoringSnapshot?.sidebar??sidebarTop;
  if(!restoringSnapshot&&previousFocus!==state.focus)root.querySelector('.directory-tree [aria-current="page"]')?.scrollIntoView({block:'nearest'});
  const labels={spec:'说明与规格',architecture:'整体组织',workflow:'功能路径'};
  document.getElementById('breadcrumb').textContent=state.mode==='a'?'项目概览 / '+labels[state.panel]:state.mode==='updates'?'更新记录'+(byId.get(state.update)?' / '+byId.get(state.update).title:''):(documents.has(state.document)?'原始资料 / '+documents.get(state.document).title:'项目条目 / '+(selected()?.title||'全部条目'));
+ if(isSystem&&state.mode!=='updates')document.getElementById('breadcrumb').textContent=state.mode==='a'?'系统概览 / '+(state.panel==='architecture'?'整体组织':'系统说明'):state.mode==='members'?'收录项目':'接口与关联 / '+(({interfaces:'接口目录',relations:'关联关系'})[state.angle]||selected()?.title||'系统记录');
  if(restoringSnapshot){[...root.querySelectorAll('main details')].forEach((e,i)=>e.open=Boolean(restoringSnapshot.details?.[i]));if(main)main.scrollTop=restoringSnapshot.main||0;}else restoreChapter();
  displayedState={...state};pageHistory.commit(writeHash());
 }
-function render(){renderContent();document.getElementById('announce').textContent=({a:'项目概览',b:'项目条目',updates:'更新记录'})[state.mode];}
+function render(){renderContent();document.getElementById('announce').textContent=(isSystem?{a:'系统概览',b:'接口与关联',members:'收录项目',updates:'更新记录'}:{a:'项目概览',b:'项目条目',updates:'更新记录'})[state.mode];}
 function focusDiagram(type,node){
  if(!['architecture','workflow'].includes(type))return;
+ if(isSystem&&type==='workflow')return;
  state.mode='a';state.panel=type;state.node=node;state.document='';state.anchor='';state.query='';render();
  root.querySelector('.canvas-stage')?.scrollIntoView({block:'center',behavior:'auto'});
 }

@@ -30,6 +30,10 @@ search 是中文子串、词面和别名检索，默认可以找历史记录；�
 
 脚本从当前源文件读取，不依赖持久语义数据库。外部依赖、未索引内容和动态调用可能需要另行核查。
 
+局部检索可先用 `modules <project>` 找模块 ID，再用 `search <project> 关键词 --module MOD-id`。`read` 的 `--record-fingerprint` 只检查当前记录及绑定源，允许无关模块改动后的续读；`--fingerprint` 仍检查整图。部分读取会明确提示尚未打开的约束不能视为已核实。
+
+系统地图新增 `members`、`interfaces`、`impact` 查询；使用 `--help` 查看各命令的范围和示例，使用 `--limit/--offset` 限制结果。`interfaces` 只汇集合同摘要与接入关系，`impact` 返回已登记反向关系。系统范围、配置与维护方法见[系统地图](system-maps.md)。
+
 ## 写入与剪枝
 
 需求、设计、接口、实现等正文直接修改其权威 Markdown 或原表格。元数据、关系和来源按[资产模型](asset-model.md)保存。绑定记录修改原始文档，不能只在生成页面修改。
@@ -68,6 +72,8 @@ python "<skill>/scripts/render_map.py" "docs/project/project.yaml" --mode a
 `--output "另一个目录/index.html"` 可指定位置，`--mode b` 以项目条目打开，默认 `--mode a` 以项目概览打开，页面内仍可切换。只需离线文件时加 `--export-only`，不会启动服务。生成参数不改变源记录的需求和状态。
 
 服务只监听本机，按需启动，不调用 LLM；同一输出位置的服务仍在运行时复用原地址。再次生成后刷新浏览器读取新内容，服务不会自行重新生成地图。连续 8 小时无请求后退出；重启电脑或服务退出后，重新执行生成命令取得当前地址。
+
+系统地图的“进入项目”链接会在新标签页按成员 ID 解析目标，必要时生成目标阅读页并复用其服务。系统页本身仍是导出快照；成员接口变化后按需重新导出即可。Windows 下 Git 查询、渲染器及其子进程均以隐藏命令窗口方式启动。
 
 ```text
 python "<skill>/scripts/serve_map.py" status "docs/project/views/index.html"

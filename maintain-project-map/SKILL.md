@@ -1,6 +1,6 @@
 ---
 name: maintain-project-map
-description: Maintain and explain project maps for software, workflows, and skills. Use when adopting a map, finding design intent, or revising requirements, interfaces, or obsolete records in a mapped project.
+description: Maintain and explain project maps for software, workflows, and skills, and system maps connecting independent projects. Use when adopting a map, finding design intent, or revising requirements, interfaces, dependencies, or obsolete records.
 ---
 
 # 项目维护地图
@@ -16,6 +16,8 @@ description: Maintain and explain project maps for software, workflows, and skil
 新接入或调整记录组织时，读 [资产模型](references/asset-model.md)。先绑定既有需求、架构和验证文档及其编号；建立最小入口，随实际工作补充。接入不要求先完成全量历史整理。
 
 接入组合项目，或整理模块层级、扩展接口及其图源时，读 [组合项目与扩展接口](references/composite-projects.md)。根据职责、独立接口和维护需要判断子模块及更深层级；接口合同只在提供方维护一份，双方接入说明相互链接。图应表达相关内部功能、归属和接口连接，不能用插件名称列表代替必要的结构分析。
+
+需要把独立项目地图汇成某个开发对象的系统总览时，读 [系统地图](references/system-maps.md)。明确收录范围，用稳定 ID 关联项目和合同；保留一般图依赖，不复制子项目正文。局部开发可直接查询目标项目，系统地图不是必读的上层入口。
 
 ## 维护当前认识
 

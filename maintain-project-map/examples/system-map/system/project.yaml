@@ -1,0 +1,45 @@
+{
+  "schema": "project-map/v1",
+  "project_id": "example-system",
+  "name": "协作系统 · 示例",
+  "kind": "system",
+  "map": "map.md",
+  "sources": [],
+  "bindings": [],
+  "archify": {
+    "architecture": {
+      "source": "diagrams/architecture.json",
+      "node_records": {},
+      "node_projects": {
+        "core": "example-core",
+        "board": "example-board",
+        "graph": "example-graph"
+      }
+    }
+  },
+  "system": {
+    "members": [
+      {
+        "project_id": "example-core",
+        "manifest": "../core/project.yaml",
+        "role": "提供引用定位与上下文提交接口",
+        "scope": "示例中的明确收录项目",
+        "diagram": "architecture"
+      },
+      {
+        "project_id": "example-board",
+        "manifest": "../board/project.yaml",
+        "role": "以笔记卡片使用引用定位",
+        "scope": "示例中的明确收录项目",
+        "diagram": "architecture"
+      },
+      {
+        "project_id": "example-graph",
+        "manifest": "../graph/project.yaml",
+        "role": "以图节点使用引用定位",
+        "scope": "示例中的明确收录项目",
+        "diagram": "architecture"
+      }
+    ]
+  }
+}

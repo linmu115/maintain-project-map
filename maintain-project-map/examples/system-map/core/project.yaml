@@ -1,0 +1,21 @@
+{
+  "schema": "project-map/v1",
+  "project_id": "example-core",
+  "name": "Reference Core · 示例",
+  "kind": "software",
+  "map": "map.md",
+  "sources": [],
+  "bindings": [],
+  "archify": {
+    "architecture": {
+      "source": "diagrams/architecture.json",
+      "node_records": {
+        "module": [
+          "MOD-api",
+          "IF-reference",
+          "IF-submit"
+        ]
+      }
+    }
+  }
+}

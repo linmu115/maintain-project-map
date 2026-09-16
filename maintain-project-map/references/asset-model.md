@@ -4,6 +4,8 @@
 
 ## 一项目一地图
 
+面向多个独立项目的系统总览可使用 `kind: system`、明确的 `system.members` 和 `archify.architecture.node_projects`。完整约定见[系统地图](system-maps.md)。系统聚合入口不复制子项目档案，不把一般图关系变成父子树；已有普通项目无需迁移。模块检索可选用 `module_id`，接口类别可选用 `interface_family`，均不改变记录 ID。
+
 project_id 是长期身份，项目名、目录、阅读方式和工作树变化不改变它。一个项目可以有多份文档和仓库；只在用户实际维护独立组合项目时另外建图，不因出现依赖就建立全局父图。
 
 project.yaml 放在选定地图目录；常用位置是 docs/project/。map.md 是人能读懂的项目入口，不复制完整规格。需要独立记录时才建立 records/ 分类目录，版本历史继续使用 Git。

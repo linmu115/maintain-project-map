@@ -96,7 +96,7 @@ class PreviewTests(unittest.TestCase):
 
     def test_two_processes_start_one_service(self):
         command = [sys.executable, "-B", str(SCRIPTS / "serve_map.py"), "start", str(self.entry)]
-        children = [subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE) for _ in range(2)]
+        children = [subprocess.Popen(command, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0), stdout=subprocess.PIPE, stderr=subprocess.PIPE) for _ in range(2)]
         results = []
         for child in children:
             out, err = child.communicate(timeout=15)
@@ -110,13 +110,13 @@ class PreviewTests(unittest.TestCase):
         init_project(project, "阅读样例", kind="skill")
         command = [sys.executable, "-B", str(SCRIPTS / "render_map.py"), str(project),
                    "--no-diagrams", "--output", str(self.entry)]
-        result = subprocess.run(command, capture_output=True, timeout=15)
+        result = subprocess.run(command, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0), capture_output=True, timeout=15)
         self.assertEqual(result.returncode, 0, result.stderr.decode("utf-8"))
         payload = json.loads(result.stdout)
         self.assertEqual(payload["preview"]["status"], "running")
         self.assertEqual(fetch(payload["url"])[0], 200)
         stop_reader(self.entry)
-        result = subprocess.run(command + ["--export-only"], capture_output=True, timeout=15)
+        result = subprocess.run(command + ["--export-only"], creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0), capture_output=True, timeout=15)
         self.assertEqual(result.returncode, 0, result.stderr.decode("utf-8"))
         self.assertNotIn("preview", json.loads(result.stdout))
         self.assertEqual(reader_status(self.entry)["status"], "stopped")

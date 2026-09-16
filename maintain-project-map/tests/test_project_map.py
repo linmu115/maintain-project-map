@@ -137,7 +137,7 @@ def slow_read(path):
 pm._registry = slow_read
 pm.register_project(sys.argv[2], sys.argv[3])
 ''', encoding="utf-8")
-        children = [subprocess.Popen([sys.executable, "-X", "utf8", str(helper), str(MODULE), str(base), str(registry)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding="utf-8") for base in (self.base, other)]
+        children = [subprocess.Popen([sys.executable, "-X", "utf8", str(helper), str(MODULE), str(base), str(registry)], creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding="utf-8") for base in (self.base, other)]
         try:
             for child in children:
                 out, err = child.communicate(timeout=15)
