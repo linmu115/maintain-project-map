@@ -14,7 +14,8 @@ Python 3.10+ 用于记录操作，安装 `maintain-project-map/requirements.txt`
 
 - 稳定项目 ID 与本机位置登记，跨项目用简短 ID 引用。
 - 绑定已有需求文档的章节或表格行，避免复制一套规格。
-- 按需采用[组合项目与扩展接口](maintain-project-map/references/composite-projects.md)的组织指引：职责层级、提供方唯一合同、双方接入链接，以及 Archify 模块边界和泳道。该指引不代表阅读器已支持文件夹树导航。
+- 按需采用[组合项目与扩展接口](maintain-project-map/references/composite-projects.md)的组织指引：职责层级、提供方唯一合同、具体能力的接入依据，以及 Archify 模块边界和泳道。
+- 模块目录自动生成 B/C 可展开侧栏；Mistune 解析 Markdown，标准文档链接和 Wiki 链接连接记录、章节及已声明原资料。同义反向关系合并显示。
 - 记录合并、退役和失败探索分别表达；实现与验证独立存储。
 - 按名称、别名、正文检索；支持检索明确指定的 Codex 可见会话记录。
 - 按需生成三种人读页面：项目概览、项目条目、连续文档。白色为主的阅读界面、独立滚动、文档内按点击激活的画布。

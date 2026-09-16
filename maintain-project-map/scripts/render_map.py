@@ -4,105 +4,18 @@ from __future__ import annotations
 
 import argparse
 from datetime import datetime, timezone
-import html
 import json
 import os
 from pathlib import Path
-import re
 import sys
 import tempfile
-from urllib.parse import urlparse
 
 from archify_adapter import render_diagrams, diagram_targets, protect_targets
+from reader_content import LocalDocuments, build_navigation
+from reader_markdown import markdown_html
+from project_map import normalize_relations
 
 ASSETS = Path(__file__).resolve().parent.parent / "assets"
-
-
-def _inline(text: str) -> str:
-    """A small safe Markdown subset: code, emphasis, links. HTML stays text."""
-    result = []
-    # Parse raw text into independent spans; never re-parse generated markup.
-    pattern = re.compile(r"(`[^`]+`|\*\*[^*]+\*\*|\[[^\]]+\]\([^\s)]+\))")
-    for span in pattern.split(text):
-        if span.startswith("`") and span.endswith("`"):
-            result.append("<code>" + html.escape(span[1:-1]) + "</code>")
-        elif span.startswith("**") and span.endswith("**"):
-            result.append("<strong>" + html.escape(span[2:-2]) + "</strong>")
-        elif span.startswith("[") and "](" in span:
-            label, destination = span[1:-1].split("](", 1)
-            parsed = urlparse(destination)
-            # File/relative references are visible locators, not web-server paths.
-            if parsed.scheme.lower() in {"https", "http"} and parsed.netloc:
-                result.append('<a href="' + html.escape(destination, quote=True) + '" target="_blank" rel="noopener noreferrer">' + html.escape(label) + "</a>")
-            else:
-                result.append(html.escape(label) + " <code>" + html.escape(destination) + "</code>")
-        else:
-            result.append(html.escape(span))
-    return "".join(result)
-
-
-def markdown_html(source: str) -> str:
-    """Render headings, lists, quotes, tables and fenced code without raw HTML."""
-    lines = str(source).splitlines()
-    output, paragraph = [], []
-    in_code, code, list_type = False, [], None
-
-    def flush_paragraph():
-        if paragraph:
-            output.append("<p>" + _inline(" ".join(paragraph)) + "</p>")
-            paragraph.clear()
-
-    def close_list():
-        nonlocal list_type
-        if list_type:
-            output.append(f"</{list_type}>")
-            list_type = None
-
-    i = 0
-    while i < len(lines):
-        line = lines[i]
-        if line.lstrip().startswith("```"):
-            flush_paragraph(); close_list()
-            if in_code:
-                output.append("<pre><code>" + html.escape("\n".join(code)) + "</code></pre>")
-                code = []
-            in_code = not in_code
-        elif in_code:
-            code.append(line)
-        elif not line.strip():
-            flush_paragraph(); close_list()
-        elif re.match(r"^#{1,6}\s", line):
-            flush_paragraph(); close_list()
-            level, title = line.split(" ", 1)
-            # Document h1 is a section inside the product page.
-            n = min(6, len(level) + 1)
-            output.append(f"<h{n}>" + _inline(title) + f"</h{n}>")
-        elif "|" in line and i + 1 < len(lines) and re.match(r"^\s*\|?\s*:?-{3,}", lines[i + 1]):
-            flush_paragraph(); close_list()
-            cells = lambda row: [part.strip() for part in row.strip().strip("|").split("|")]
-            output.append("<table><thead><tr>" + "".join("<th>" + _inline(c) + "</th>" for c in cells(line)) + "</tr></thead><tbody>")
-            i += 2
-            while i < len(lines) and "|" in lines[i] and lines[i].strip():
-                output.append("<tr>" + "".join("<td>" + _inline(c) + "</td>" for c in cells(lines[i])) + "</tr>")
-                i += 1
-            output.append("</tbody></table>")
-            continue
-        elif (match := re.match(r"^\s*([-*+]\s+|\d+\.\s+)(.+)$", line)):
-            flush_paragraph()
-            kind = "ol" if match.group(1)[0].isdigit() else "ul"
-            if list_type != kind:
-                close_list(); output.append(f"<{kind}>"); list_type = kind
-            output.append("<li>" + _inline(match.group(2)) + "</li>")
-        elif line.startswith("> "):
-            flush_paragraph(); close_list()
-            output.append("<blockquote>" + _inline(line[2:]) + "</blockquote>")
-        else:
-            close_list(); paragraph.append(line)
-        i += 1
-    flush_paragraph(); close_list()
-    if in_code:
-        output.append("<pre><code>" + html.escape("\n".join(code)) + "</code></pre>")
-    return "\n".join(output)
 
 
 def safe_json(data: dict) -> str:
@@ -128,10 +41,13 @@ def export_reader(data: dict, output: Path, mode: str = "a", node: str | None = 
     payload.pop("diagram_sources", None)
     payload["default_mode"] = mode
     payload["exported_at"] = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    payload["map_html"] = markdown_html(data.get("map_body", ""))
+    links = LocalDocuments(data)
+    payload["relations"] = normalize_relations(data.get("relations", []), data["project"]["project_id"])
+    payload["navigation"] = build_navigation(data)
+    payload["map_html"] = markdown_html(data.get("map_body", ""), links.renderer(links.map_path), "map")
     payload["records"] = []
     for record in data.get("records", []):
-        item = {**record, "body_html": markdown_html(record.get("body", ""))}
+        item = {**record, "body_html": markdown_html(record.get("body", ""), links.renderer(record["path"], record["id"]), record["id"])}
         # Source bytes and fingerprint must come from the same load snapshot.
         # A table binding can project fields into body while source_text retains
         # its original row. Do not read the path again after load_project.
@@ -139,6 +55,8 @@ def export_reader(data: dict, output: Path, mode: str = "a", node: str | None = 
             item["source_text"] = record.get("body", "")
             item["source_note"] = "此快照未提供原文摘录；此处保留加载时的正文。"
         payload["records"].append(item)
+    payload["linked_documents"] = links.render_documents(markdown_html)
+    protect_targets({**data, "source_files": data.get("source_files", []) + list(links.documents.values())}, targets)
     if diagrams:
         payload["diagrams"] = render_diagrams(data, output.parent, node=node)
     else:

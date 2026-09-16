@@ -42,7 +42,7 @@ class ReaderSafetyTests(unittest.TestCase):
         self.assertNotIn('href="javascript:', result)
         self.assertIn('href="https://example.com/x"', result)
         self.assertIn("&lt;script&gt;", result)
-        self.assertIn("<pre><code>", result)
+        self.assertRegex(result, r"<pre><code(?: [^>]*)?>")
 
     def test_markdown_preserves_readable_structure(self):
         result = markdown_html('# 对象\n\n**地图**与 `ID`。\n\n- 需求\n- 理由\n\n|对象|作用|\n|---|---|\n|地图|定位|\n')
@@ -122,7 +122,7 @@ class DiagramTests(unittest.TestCase):
         # Execute only the actual pure filtering function, with no DOM/browser.
         function = re.search(r"^function visible\(\).*", page, flags=re.M).group(0)
         records = [{"id": "OLD", "title": "旧入口", "aliases": ["分享卡片"], "status": "withdrawn", "kind": "module"}, {"id": "BROKEN", "title": "仍存在的模块", "status": "failed", "kind": "module"}, {"id": "EXP", "title": "失败探索", "kind": "exploration", "status": "current", "outcome": "failed"}]
-        script = "const records=" + json.dumps(records, ensure_ascii=False) + ";const historical=new Set(" + json.dumps(sorted(HISTORICAL)) + ");let state={history:false,verification:false,query:''};" + function + ";const current=visible().map(r=>r.id);state.query='分享卡片';const matched=visible().map(r=>r.id);process.stdout.write(JSON.stringify({current,matched}));"
+        script = "const recordOrder=new Map();const records=" + json.dumps(records, ensure_ascii=False) + ";const historical=new Set(" + json.dumps(sorted(HISTORICAL)) + ");let state={history:false,verification:false,query:''};" + function + ";const current=visible().map(r=>r.id);state.query='分享卡片';const matched=visible().map(r=>r.id);process.stdout.write(JSON.stringify({current,matched}));"
         result = subprocess.run([node, "-e", script], capture_output=True, text=True, encoding="utf-8", timeout=10, check=True)
         self.assertEqual(json.loads(result.stdout), {"current": ["BROKEN", "EXP"], "matched": ["OLD"]})
 

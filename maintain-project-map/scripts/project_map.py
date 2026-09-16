@@ -231,6 +231,43 @@ def _relations(values: Any, label: str) -> list[dict]:
     return result
 
 
+def normalize_relations(relations: list[dict], project_id: str) -> list[dict]:
+    """One edge for known inverse spellings; retain distinct roles and qualifiers.
+
+    Source records stay untouched. The query/reader projection combines reasons
+    but never merges relations with different versions, mechanisms or evidence.
+    """
+    inverse = {"provided_by": "provides", "used_by": "consumes",
+               "contained_by": "contains", "belongs_to": "contains", "part_of": "contains"}
+    grouped = {}
+    for declaration in relations:
+        relation = copy.deepcopy(declaration)
+        for side in ("from", "to"):
+            relation[side].setdefault("project_id", project_id)
+        if relation["relation"] in inverse:
+            relation["relation"] = inverse[relation["relation"]]
+            relation["from"], relation["to"] = relation["to"], relation["from"]
+        reasons = relation.pop("reasons", None) or [relation.get("reason", "")]
+        count = relation.pop("declaration_count", 1)
+        key = json.dumps({k: v for k, v in relation.items() if k != "reason"},
+                         sort_keys=True, ensure_ascii=False)
+        if key not in grouped:
+            grouped[key] = (relation, [], 0)
+        row, notes, total = grouped[key]
+        notes.extend(note for note in reasons if note and note not in notes)
+        grouped[key] = row, notes, total + count
+    result = []
+    for row, notes, count in grouped.values():
+        if notes:
+            row["reason"] = notes[0]
+        if len(notes) > 1:
+            row["reasons"] = notes
+        if count > 1:
+            row["declaration_count"] = count
+        result.append(row)
+    return result
+
+
 def _summary(body: str) -> str:
     for line in body.splitlines():
         clean = line.strip()
@@ -533,7 +570,7 @@ def load_project(manifest_path: str | Path) -> dict:
     version = _git_version(base, list(fingerprints))
     version["context_scope"] = "Map directory checkout only; this Git HEAD does not cover source files in other repositories. Compare declared source_sha256 values for external files."
     result = {"project": project, "manifest_path": str(manifest), "map_path": str(map_path),
-              "map_body": map_body, "records": records, "relations": relations,
+              "map_body": map_body, "records": records, "relations": normalize_relations(relations, project_id),
               "version": version, "fingerprint": fp.hexdigest(),
               "source_files": file_digests, "diagram_sources": diagram_sources}
     result["validation"] = _validation(result)
