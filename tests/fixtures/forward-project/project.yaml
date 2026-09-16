@@ -1,0 +1,5 @@
+schema: project-map/v1
+project_id: 42eca24f-eb30-4b8e-9f83-ab74fc28f13d
+name: 本地材料归档工作流
+kind: workflow
+map: map.md

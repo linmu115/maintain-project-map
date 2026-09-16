@@ -1,0 +1,4 @@
+interface:
+  display_name: "项目维护地图"
+  short_description: "维护项目需求、设计与实现地图，按需检索来源，并生成开发者可阅读的结构和流程"
+  default_prompt: "使用 $maintain-project-map 为当前项目建立或维护地图，复用已有文档，按本次任务查回并更新相关记录。"

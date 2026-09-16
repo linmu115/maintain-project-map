@@ -1,0 +1,488 @@
+{
+  "repository": "https://github.com/tt-a1i/archify",
+  "commit": "d673e8300df60a5c8166abe78787fdc78f6b8000",
+  "license": "MIT",
+  "source_bytes": "git blobs from the pinned commit, without checkout line-ending conversion",
+  "files": [
+    "archify/LICENSE",
+    "archify/THIRD_PARTY_NOTICES.md",
+    "archify/assets/JetBrainsMono-OFL.txt",
+    "archify/assets/template.html",
+    "archify/bin/archify.mjs",
+    "archify/bin/open-artifact.mjs",
+    "archify/bin/preview.mjs",
+    "archify/bin/visual-check.mjs",
+    "archify/delta/architecture-delta.mjs",
+    "archify/examples/agent-run.lifecycle.json",
+    "archify/examples/agent-tool-call.workflow.json",
+    "archify/examples/async-job-roundtrip.sequence.json",
+    "archify/examples/brand-aware-delivery.architecture.json",
+    "archify/examples/cache-miss-request.sequence.json",
+    "archify/examples/checkout-platform.base.architecture.json",
+    "archify/examples/checkout-platform.head.architecture.json",
+    "archify/examples/deployment-release.lifecycle.json",
+    "archify/examples/event-stream.dataflow.json",
+    "archify/examples/incident-response.workflow.json",
+    "archify/examples/product-analytics.dataflow.json",
+    "archify/examples/production-deployment.architecture.json",
+    "archify/examples/release-delivery.workflow.json",
+    "archify/examples/web-app.architecture.json",
+    "archify/migrations/workflow-v2.mjs",
+    "archify/package.json",
+    "archify/recipes/scenarios.mjs",
+    "archify/references/authoring-contract.md",
+    "archify/references/brand-marks.md",
+    "archify/references/delivery-contract.md",
+    "archify/references/viewer-runtime.md",
+    "archify/renderers/architecture/grid.mjs",
+    "archify/renderers/architecture/render-architecture.mjs",
+    "archify/renderers/dataflow/README.md",
+    "archify/renderers/dataflow/render-dataflow.mjs",
+    "archify/renderers/lifecycle/README.md",
+    "archify/renderers/lifecycle/render-lifecycle.mjs",
+    "archify/renderers/sequence/README.md",
+    "archify/renderers/sequence/render-sequence.mjs",
+    "archify/renderers/shared/brand-marks.mjs",
+    "archify/renderers/shared/cli.mjs",
+    "archify/renderers/shared/desktop-readability.mjs",
+    "archify/renderers/shared/diagnostics.mjs",
+    "archify/renderers/shared/engineering-profiles.mjs",
+    "archify/renderers/shared/generated-brand-marks.mjs",
+    "archify/renderers/shared/generated-validators.mjs",
+    "archify/renderers/shared/geometry.mjs",
+    "archify/renderers/shared/i18n.mjs",
+    "archify/renderers/shared/layout-report.mjs",
+    "archify/renderers/shared/legend.mjs",
+    "archify/renderers/shared/output-path.mjs",
+    "archify/renderers/shared/repository-evidence.mjs",
+    "archify/renderers/shared/repository-location.mjs",
+    "archify/renderers/shared/text-fit.mjs",
+    "archify/renderers/shared/utils.mjs",
+    "archify/renderers/shared/validator.mjs",
+    "archify/renderers/workflow/README.md",
+    "archify/renderers/workflow/render-workflow.mjs",
+    "archify/renderers/workflow/workflow-compiler.mjs",
+    "archify/renderers/workflow/workflow-migration-geometry.mjs",
+    "archify/schemas/README.md",
+    "archify/schemas/architecture.schema.json",
+    "archify/schemas/common.schema.json",
+    "archify/schemas/dataflow.schema.json",
+    "archify/schemas/lifecycle.schema.json",
+    "archify/schemas/sequence.schema.json",
+    "archify/schemas/workflow.schema.json",
+    "archify/scripts/check-render-output.mjs",
+    "archify/scripts/render-examples.mjs"
+  ],
+  "file_manifest": [
+    {
+      "path": "LICENSE",
+      "upstream_path": "archify/LICENSE",
+      "sha256": "b799ab081703e7821ae5096d2c1abdf14bbdc75e8ea1c4045998c36ed6db9706",
+      "bytes": 1102
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "upstream_path": "archify/THIRD_PARTY_NOTICES.md",
+      "sha256": "0b7fb59365dc21c93b0f62526d74ee913aeec9ae532c112bc76afa7edcd56e14",
+      "bytes": 5248
+    },
+    {
+      "path": "assets/JetBrainsMono-OFL.txt",
+      "upstream_path": "archify/assets/JetBrainsMono-OFL.txt",
+      "sha256": "c1ab7c666206842a02b35b30770dac0d7a10156ed401c9defc3f02a754d89e90",
+      "bytes": 4398
+    },
+    {
+      "path": "assets/template.html",
+      "upstream_path": "archify/assets/template.html",
+      "sha256": "003f2ddc4ec00ab37bdb0c9351cde73ccd9a82ef193a15adae6179eb4c51a735",
+      "bytes": 774214
+    },
+    {
+      "path": "bin/archify.mjs",
+      "upstream_path": "archify/bin/archify.mjs",
+      "sha256": "13f0f1ea8f3da1b090360c848079a877752bec1554e26c57377573673dd687d8",
+      "bytes": 77637
+    },
+    {
+      "path": "bin/open-artifact.mjs",
+      "upstream_path": "archify/bin/open-artifact.mjs",
+      "sha256": "add1722186683c12770c575585bbb8774919c15b87361e10d2fe834623223159",
+      "bytes": 2225
+    },
+    {
+      "path": "bin/preview.mjs",
+      "upstream_path": "archify/bin/preview.mjs",
+      "sha256": "6d41e491d42070c05b5e278548714da1fcef6e6adfd84a0391ab2bf12f47373c",
+      "bytes": 23722
+    },
+    {
+      "path": "bin/visual-check.mjs",
+      "upstream_path": "archify/bin/visual-check.mjs",
+      "sha256": "8fa8c6f233f3598f4f22e58c48a4de6f45b3b072ad8e7aee4731c49b4bfbdc52",
+      "bytes": 33390
+    },
+    {
+      "path": "delta/architecture-delta.mjs",
+      "upstream_path": "archify/delta/architecture-delta.mjs",
+      "sha256": "17c156095c0580988bb5b5fb84a991f3c93e9a804e4aef1c949e32d89f506b48",
+      "bytes": 72894
+    },
+    {
+      "path": "examples/agent-run.lifecycle.json",
+      "upstream_path": "archify/examples/agent-run.lifecycle.json",
+      "sha256": "7c0ad72ee7affbd6c6e4758b7520d61ddd4508c917acf36beabcad3ee7ca3ba7",
+      "bytes": 4044
+    },
+    {
+      "path": "examples/agent-tool-call.workflow.json",
+      "upstream_path": "archify/examples/agent-tool-call.workflow.json",
+      "sha256": "4d3f6c23de2ca7d306e05d0041a9506833bb5a164a2bddc2d1984cf4da3ee90c",
+      "bytes": 5687
+    },
+    {
+      "path": "examples/async-job-roundtrip.sequence.json",
+      "upstream_path": "archify/examples/async-job-roundtrip.sequence.json",
+      "sha256": "545f20920c89b69c2bb1f15508d5543fddbeb15cffba61e102206e04bd5a5cd9",
+      "bytes": 4370
+    },
+    {
+      "path": "examples/brand-aware-delivery.architecture.json",
+      "upstream_path": "archify/examples/brand-aware-delivery.architecture.json",
+      "sha256": "d4f0df8114b3524756ffa49529c015e00757b0594a357183490c1edeb341e3c6",
+      "bytes": 3271
+    },
+    {
+      "path": "examples/cache-miss-request.sequence.json",
+      "upstream_path": "archify/examples/cache-miss-request.sequence.json",
+      "sha256": "9a799a3661c16cd6ab4f6373ff6a04da95a9ab70d93b0a349b668466f4912fd7",
+      "bytes": 4374
+    },
+    {
+      "path": "examples/checkout-platform.base.architecture.json",
+      "upstream_path": "archify/examples/checkout-platform.base.architecture.json",
+      "sha256": "c112195e7285e3e4aedaeab3e1f85f5891d30fccc2c260aebe4e1da12c80cf84",
+      "bytes": 2234
+    },
+    {
+      "path": "examples/checkout-platform.head.architecture.json",
+      "upstream_path": "archify/examples/checkout-platform.head.architecture.json",
+      "sha256": "e3aaf47f77afeadafc81c6ce853dc1df68cc1e6932dec972cf478f4008fdda99",
+      "bytes": 2368
+    },
+    {
+      "path": "examples/deployment-release.lifecycle.json",
+      "upstream_path": "archify/examples/deployment-release.lifecycle.json",
+      "sha256": "735c2c5819266e6ea2a71775b6eefce98b53030ce90cb721dc8e1d022ce5be71",
+      "bytes": 4274
+    },
+    {
+      "path": "examples/event-stream.dataflow.json",
+      "upstream_path": "archify/examples/event-stream.dataflow.json",
+      "sha256": "a92d6597ddbe164f395da32a7d4b33cfae08edd7d9600a6fb45a2058e5bbb43e",
+      "bytes": 5433
+    },
+    {
+      "path": "examples/incident-response.workflow.json",
+      "upstream_path": "archify/examples/incident-response.workflow.json",
+      "sha256": "5c760c82eee545dfb7da38a4e628059d7891af4cfbfc13c8a7009ea64f69aa1b",
+      "bytes": 5375
+    },
+    {
+      "path": "examples/product-analytics.dataflow.json",
+      "upstream_path": "archify/examples/product-analytics.dataflow.json",
+      "sha256": "91411404fb4828a3b7ea358f3a7b9877781c9e9dc9c04b42b6eb4a757281b59f",
+      "bytes": 5618
+    },
+    {
+      "path": "examples/production-deployment.architecture.json",
+      "upstream_path": "archify/examples/production-deployment.architecture.json",
+      "sha256": "ec484aa8576664fdb207b543fa49486b23273faccb7a5071e1a0becfb48c22eb",
+      "bytes": 5476
+    },
+    {
+      "path": "examples/release-delivery.workflow.json",
+      "upstream_path": "archify/examples/release-delivery.workflow.json",
+      "sha256": "e5c880417eac1623923c3dd5461e0c78acd762e1621a28bd53fc14a84cad6a91",
+      "bytes": 5164
+    },
+    {
+      "path": "examples/web-app.architecture.json",
+      "upstream_path": "archify/examples/web-app.architecture.json",
+      "sha256": "483350f5297df682aba4e4a0fa491307ce3d3abd725ae4df07fab177490752cf",
+      "bytes": 3793
+    },
+    {
+      "path": "migrations/workflow-v2.mjs",
+      "upstream_path": "archify/migrations/workflow-v2.mjs",
+      "sha256": "77aadc38460e5e778344901f492cc00f16f74e8fe1def14b01e6d6d346b9f4c7",
+      "bytes": 9168
+    },
+    {
+      "path": "package.json",
+      "upstream_path": "archify/package.json",
+      "sha256": "d065836911f377598cbfd8e1c0166eaadc3397de18a21e3c57742fac8f15bd11",
+      "bytes": 1631
+    },
+    {
+      "path": "recipes/scenarios.mjs",
+      "upstream_path": "archify/recipes/scenarios.mjs",
+      "sha256": "e77d31d5b65b921799f4f560287fbac24feb3cd683bee8cabe49ed1ddde1a8ac",
+      "bytes": 32073
+    },
+    {
+      "path": "references/authoring-contract.md",
+      "upstream_path": "archify/references/authoring-contract.md",
+      "sha256": "873494557cf9be91d9eed8ecce37072886c0e98b851ad59ab8938f405c6fbc5e",
+      "bytes": 13962
+    },
+    {
+      "path": "references/brand-marks.md",
+      "upstream_path": "archify/references/brand-marks.md",
+      "sha256": "8010869da70677e686ecb312d9c3eec2d20723a44f817ab2bbf5525361c8a136",
+      "bytes": 2179
+    },
+    {
+      "path": "references/delivery-contract.md",
+      "upstream_path": "archify/references/delivery-contract.md",
+      "sha256": "a614c31f41d270995a5aee99036532470a43722f8208fdc8ef922805914d1d01",
+      "bytes": 8604
+    },
+    {
+      "path": "references/viewer-runtime.md",
+      "upstream_path": "archify/references/viewer-runtime.md",
+      "sha256": "dc0d9ffe6b9987d73d2d48710fce5ab4c120bbf1940ff1eb9355259c5d4f32b6",
+      "bytes": 4243
+    },
+    {
+      "path": "renderers/architecture/grid.mjs",
+      "upstream_path": "archify/renderers/architecture/grid.mjs",
+      "sha256": "f6de99c32436feed3378b0ddef516bb4732ff27a89c543b50635d4d14a15a55a",
+      "bytes": 2071
+    },
+    {
+      "path": "renderers/architecture/render-architecture.mjs",
+      "upstream_path": "archify/renderers/architecture/render-architecture.mjs",
+      "sha256": "f57077cb9fa64a8412ab0af705cb31e2e7a920114b31852882c04a76840365dc",
+      "bytes": 45546
+    },
+    {
+      "path": "renderers/dataflow/README.md",
+      "upstream_path": "archify/renderers/dataflow/README.md",
+      "sha256": "18c4f86ba62fcee371d9fe38094625b3a68cc76231c36ab8c8124acb4c1ffa42",
+      "bytes": 4202
+    },
+    {
+      "path": "renderers/dataflow/render-dataflow.mjs",
+      "upstream_path": "archify/renderers/dataflow/render-dataflow.mjs",
+      "sha256": "5a5da505e5c68041990de92847f53a38215efb9212bc36fc911774e8829335c9",
+      "bytes": 21194
+    },
+    {
+      "path": "renderers/lifecycle/README.md",
+      "upstream_path": "archify/renderers/lifecycle/README.md",
+      "sha256": "f8ef88dc859189bb18bad7bb2e27d997cbc9d30936cf20f8bf401bae7f57deec",
+      "bytes": 5197
+    },
+    {
+      "path": "renderers/lifecycle/render-lifecycle.mjs",
+      "upstream_path": "archify/renderers/lifecycle/render-lifecycle.mjs",
+      "sha256": "23720729a14495b4085839653ec0622f2465be3b1e8c9eb556b602ab3f4a8cda",
+      "bytes": 24285
+    },
+    {
+      "path": "renderers/sequence/README.md",
+      "upstream_path": "archify/renderers/sequence/README.md",
+      "sha256": "a442335dcf44b1587d3ad88809e31b001a4fafdf7a134040e8b1927455af4206",
+      "bytes": 4828
+    },
+    {
+      "path": "renderers/sequence/render-sequence.mjs",
+      "upstream_path": "archify/renderers/sequence/render-sequence.mjs",
+      "sha256": "230c0fb79775badb4beb6fd74f45ed1ffbb70e932c3641a24bedcc61f912bddf",
+      "bytes": 21734
+    },
+    {
+      "path": "renderers/shared/brand-marks.mjs",
+      "upstream_path": "archify/renderers/shared/brand-marks.mjs",
+      "sha256": "4557b7f3eec25a3dba66a0f5da1c5dca6ec607e2a68e9be51cd697cefe9e6425",
+      "bytes": 22582
+    },
+    {
+      "path": "renderers/shared/cli.mjs",
+      "upstream_path": "archify/renderers/shared/cli.mjs",
+      "sha256": "2a6b8fa11234451627a70bca71985d80362a4c52401a90a21840d6e2ae3012d9",
+      "bytes": 10188
+    },
+    {
+      "path": "renderers/shared/desktop-readability.mjs",
+      "upstream_path": "archify/renderers/shared/desktop-readability.mjs",
+      "sha256": "b36203a11df348706e541f309266a0f9b914dac6a7eb8ba804e3abe8f8d6c710",
+      "bytes": 1089
+    },
+    {
+      "path": "renderers/shared/diagnostics.mjs",
+      "upstream_path": "archify/renderers/shared/diagnostics.mjs",
+      "sha256": "032bbcb4892c67fcda0f9c69f55fbcdd6b11dd291386a0cf118b1ba73ecda36f",
+      "bytes": 6154
+    },
+    {
+      "path": "renderers/shared/engineering-profiles.mjs",
+      "upstream_path": "archify/renderers/shared/engineering-profiles.mjs",
+      "sha256": "7e99f9d5423f66cc9ab6224da56dc2d5aa6c6faec29178034794e9db6b5b2889",
+      "bytes": 6936
+    },
+    {
+      "path": "renderers/shared/generated-brand-marks.mjs",
+      "upstream_path": "archify/renderers/shared/generated-brand-marks.mjs",
+      "sha256": "0f157d229c12df6f53763a3b88684baa5803a52484c49c4d34ec40b8743beea2",
+      "bytes": 163612
+    },
+    {
+      "path": "renderers/shared/generated-validators.mjs",
+      "upstream_path": "archify/renderers/shared/generated-validators.mjs",
+      "sha256": "a1843e5612916e7ff71511d8577cdbea9a1355eee0ed1379de0ffd668992387f",
+      "bytes": 431711
+    },
+    {
+      "path": "renderers/shared/geometry.mjs",
+      "upstream_path": "archify/renderers/shared/geometry.mjs",
+      "sha256": "161785af32241fc96df051c9be4f2bb9c3b897418d708f4a051b63f1c44952cf",
+      "bytes": 57175
+    },
+    {
+      "path": "renderers/shared/i18n.mjs",
+      "upstream_path": "archify/renderers/shared/i18n.mjs",
+      "sha256": "0d9e839c3e5346160b0028d07fcf78c86671189e0714ea069dc99913e859fcdb",
+      "bytes": 48475
+    },
+    {
+      "path": "renderers/shared/layout-report.mjs",
+      "upstream_path": "archify/renderers/shared/layout-report.mjs",
+      "sha256": "44c2f74a20e483dd37dae6791ede39284ce3bac1a2a13872d2912999e8504df5",
+      "bytes": 1015
+    },
+    {
+      "path": "renderers/shared/legend.mjs",
+      "upstream_path": "archify/renderers/shared/legend.mjs",
+      "sha256": "4c8b37f10fb5c783a28bff6aa35bc3966155213ee32f64a8252eab5b9e64a747",
+      "bytes": 8652
+    },
+    {
+      "path": "renderers/shared/output-path.mjs",
+      "upstream_path": "archify/renderers/shared/output-path.mjs",
+      "sha256": "44a5f63239703a0a56623711bb9565272488c540650cb8c3f0a3aac57928d1cf",
+      "bytes": 11645
+    },
+    {
+      "path": "renderers/shared/repository-evidence.mjs",
+      "upstream_path": "archify/renderers/shared/repository-evidence.mjs",
+      "sha256": "ce3c358093aee12790d5567de6c887ce7b9ce7961bfc742d2cf9f36eab2d4dd5",
+      "bytes": 12411
+    },
+    {
+      "path": "renderers/shared/repository-location.mjs",
+      "upstream_path": "archify/renderers/shared/repository-location.mjs",
+      "sha256": "e82fa68ab46e71566eb7aefdb48f6df67b34fd27ce36489e7787410dbfba05ce",
+      "bytes": 3453
+    },
+    {
+      "path": "renderers/shared/text-fit.mjs",
+      "upstream_path": "archify/renderers/shared/text-fit.mjs",
+      "sha256": "35b6ef2c64d88c1ea4e5aab2af7c4e8a2c2e1be62db71263787d39a9797e7dea",
+      "bytes": 2191
+    },
+    {
+      "path": "renderers/shared/utils.mjs",
+      "upstream_path": "archify/renderers/shared/utils.mjs",
+      "sha256": "20124265300eb286db184a053561005cc32b6128dc1bc1b3f9520ffa8d43a241",
+      "bytes": 11603
+    },
+    {
+      "path": "renderers/shared/validator.mjs",
+      "upstream_path": "archify/renderers/shared/validator.mjs",
+      "sha256": "7460d7fcbcdf710649256c5e96142ae26d807a655d3296ee8caf7f5e158622cc",
+      "bytes": 3508
+    },
+    {
+      "path": "renderers/workflow/README.md",
+      "upstream_path": "archify/renderers/workflow/README.md",
+      "sha256": "7e1bd65cc5cc38206304ae2f61f4f0f493da98d71a111a61d0754c9da362c5c9",
+      "bytes": 10386
+    },
+    {
+      "path": "renderers/workflow/render-workflow.mjs",
+      "upstream_path": "archify/renderers/workflow/render-workflow.mjs",
+      "sha256": "83be05d1efd1816c527fccdf3ebbd4a0f1454c6cb0c9f7554c6702eb40d9c540",
+      "bytes": 1153
+    },
+    {
+      "path": "renderers/workflow/workflow-compiler.mjs",
+      "upstream_path": "archify/renderers/workflow/workflow-compiler.mjs",
+      "sha256": "06dc97f67041037d71fd8731934d4833ece95ac1a4278e3ef875b0e51e516104",
+      "bytes": 171396
+    },
+    {
+      "path": "renderers/workflow/workflow-migration-geometry.mjs",
+      "upstream_path": "archify/renderers/workflow/workflow-migration-geometry.mjs",
+      "sha256": "ebfc5085dd008ae63802f500402fb7bf8ca0ae28460997d867f45e5493b8fbe6",
+      "bytes": 5299
+    },
+    {
+      "path": "schemas/README.md",
+      "upstream_path": "archify/schemas/README.md",
+      "sha256": "f4ca94ec18cf60ad02211f2c5bb64e9c26a87467a22215e06db34dbfc5d6145f",
+      "bytes": 11462
+    },
+    {
+      "path": "schemas/architecture.schema.json",
+      "upstream_path": "archify/schemas/architecture.schema.json",
+      "sha256": "94568c7ca72c07ac0ee02ee76bd39392874b3a13bb796a127962be68d0f5bc90",
+      "bytes": 6753
+    },
+    {
+      "path": "schemas/common.schema.json",
+      "upstream_path": "archify/schemas/common.schema.json",
+      "sha256": "2630c958314eeebb92e0f6f6330475f1a2bc48f8c1b53201ba3b58889b319c80",
+      "bytes": 3096
+    },
+    {
+      "path": "schemas/dataflow.schema.json",
+      "upstream_path": "archify/schemas/dataflow.schema.json",
+      "sha256": "09d238a6a18f2e074ec69c8f905f58a44d3a0b68fc6a925b8346c484a912af90",
+      "bytes": 5907
+    },
+    {
+      "path": "schemas/lifecycle.schema.json",
+      "upstream_path": "archify/schemas/lifecycle.schema.json",
+      "sha256": "05b46c0db95ee7ed44305b61496a96bb4f69342b20f9903d6534d952ebc65083",
+      "bytes": 6597
+    },
+    {
+      "path": "schemas/sequence.schema.json",
+      "upstream_path": "archify/schemas/sequence.schema.json",
+      "sha256": "c9fec3fad087f14d55c0bb2d34446246e3405f0238c292c1cb6bef28d1120fcb",
+      "bytes": 5642
+    },
+    {
+      "path": "schemas/workflow.schema.json",
+      "upstream_path": "archify/schemas/workflow.schema.json",
+      "sha256": "2128e82afd2b971fcb7d80ada86fa836bb4a5035b504053b87d3aeefec380e3c",
+      "bytes": 9752
+    },
+    {
+      "path": "scripts/check-render-output.mjs",
+      "upstream_path": "archify/scripts/check-render-output.mjs",
+      "sha256": "173b013e86195607fbc41a1aafc8731d145f3d2bf3e8d4c4f977fd6d17b7c4f4",
+      "bytes": 36425
+    },
+    {
+      "path": "scripts/render-examples.mjs",
+      "upstream_path": "archify/scripts/render-examples.mjs",
+      "sha256": "a173a053fb26c0ac3cd72eb9b4e50411e67ca8c50bec57f05d4ca8ba79db2c0b",
+      "bytes": 1178
+    }
+  ],
+  "upstream_file_count": 68,
+  "upstream_bytes": 2334674
+}

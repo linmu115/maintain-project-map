@@ -1,0 +1,9 @@
+/* Neutral adaptation; canonical Archify artifacts remain unchanged. */
+html[data-theme]{color-scheme:light;--bg:#ffffff;--grid:#f0f0f0;--text:#202020;--text-muted:#666666;--text-dim:#666666;--text-faint:#707070;--panel:#ffffff;--panel-border:#e5e5e5;--lane-fill:#fafafa;--lane-stroke:#d4d4d4;--arrow:#858585;--arrow-emphasis:#292929;--mask:#ffffff;--frontend-fill:#f5f5f5;--frontend-stroke:#737373;--backend-fill:#fafafa;--backend-stroke:#737373;--database-fill:#ffffff;--database-stroke:#737373;--cloud-fill:#f5f5f5;--cloud-stroke:#737373;--security-fill:#fafafa;--security-stroke:#737373;--messagebus-fill:#f5f5f5;--messagebus-stroke:#737373;--external-fill:#ffffff;--external-stroke:#999999;--toolbar-bg:#ffffff;--toolbar-border:#e5e5e5;--toolbar-text:#292929;--toolbar-hover:#f2f2f2;--toolbar-menu-bg:#ffffff}
+body{background-image:none!important;font-family:Inter,"Segoe UI","Microsoft YaHei",sans-serif!important;filter:grayscale(1)}
+#btn-theme,#btn-preset{display:none!important}
+.toolbar,.diagram-nav,.guided-view-chapter{box-shadow:none!important}
+.toolbar button,.diagram-nav button{border-radius:5px!important;font-size:12px!important}
+.toolbar button{min-height:30px!important;padding:5px 10px!important;box-shadow:none!important}
+.guided-view-chapter{border-radius:6px!important}
+.guided-view-chapter[aria-current="true"],.guided-view-chapter[aria-pressed="true"]{background:#f2f2f2!important;border-color:#777!important}
