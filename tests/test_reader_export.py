@@ -23,7 +23,7 @@ def fixture(root: Path) -> dict:
     rows = [
         {"id": "MOD-locate", "title": "定位当前项目", "kind": "module", "body": "# 定位当前项目\n\n用稳定项目 ID 定位地图。", "summary": "稳定项目 ID 定位地图。", "status": "current", "aliases": ["找地图"]},
         {"id": "MOD-records", "title": "读取原记录", "kind": "module", "body": "保留原文位置。", "summary": "按需读取目标条目。", "status": "current"},
-        {"id": "MOD-reader", "title": "生成阅读页面", "kind": "module", "body": "由同一记录生成 A/B/C。", "summary": "阅读操作不调用模型。", "status": "current", "progress": "已有本地导出。", "gap": "长期真实使用待验证。"},
+        {"id": "MOD-reader", "title": "生成阅读页面", "kind": "module", "body": "由同一记录生成 A/B。", "summary": "阅读操作不调用模型。", "status": "current", "progress": "已有本地导出。", "gap": "长期真实使用待验证。"},
         {"id": "OLD", "title": "旧自动发布", "kind": "module", "body": "已退役。", "status": "retired"},
         {"id": "CHECK", "title": "验证范围", "kind": "verification", "body": "这是独立验证记录。", "status": "current"},
     ]
@@ -75,6 +75,16 @@ class ReaderSafetyTests(unittest.TestCase):
             self.assertIn("原记录改变后需重新导出", page)
             self.assertNotIn("fetch(", page)
             self.assertNotIn("window.openai", page)
+
+    def test_retired_reader_mode_cannot_export_or_overwrite(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            output = root / "index.html"
+            output.write_text("existing reader", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                export_reader(fixture(root), output, mode="c", diagrams=False)
+            self.assertEqual(output.read_text(encoding="utf-8"), "existing reader")
+            self.assertFalse((root / "docs.json").exists())
 
     def test_snapshot_source_is_not_reread(self):
         with tempfile.TemporaryDirectory() as tmp:

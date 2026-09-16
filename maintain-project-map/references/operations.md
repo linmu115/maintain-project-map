@@ -57,7 +57,7 @@ python "<skill>/scripts/search_session.py" --source "指定任务.jsonl" --line 
 
 ## 生成阅读页面
 
-scripts/render_map.py 读取同一份地图与记录，输出 A/B/C 页面和 Archify 图形：
+scripts/render_map.py 读取同一份地图与记录，输出 A/B 页面和 Archify 图形：
 
 ```text
 python "<skill>/scripts/render_map.py" "docs/project/project.yaml" --mode a
@@ -65,7 +65,7 @@ python "<skill>/scripts/render_map.py" "docs/project/project.yaml" --mode a
 
 默认写入清单同目录下的 `views/index.html` 及图形文件，并启动或复用本机 HTTP 阅读服务。向用户交付回执中的 `url`，例如 `http://localhost:端口/本次预览标识/`。不要把 HTML 文件路径作为默认阅读地址。
 
-`--output "另一个目录/index.html"` 可指定位置，`--mode b` 或 `--mode c` 改变初始阅读方式，页面内仍可切换。只需离线文件时加 `--export-only`，不会启动服务。生成参数不改变源记录的需求和状态。
+`--output "另一个目录/index.html"` 可指定位置，`--mode b` 以项目条目打开，默认 `--mode a` 以项目概览打开，页面内仍可切换。只需离线文件时加 `--export-only`，不会启动服务。生成参数不改变源记录的需求和状态。
 
 服务只监听本机，按需启动，不调用 LLM；同一输出位置的服务仍在运行时复用原地址。再次生成后刷新浏览器读取新内容，服务不会自行重新生成地图。连续 8 小时无请求后退出；重启电脑或服务退出后，重新执行生成命令取得当前地址。
 

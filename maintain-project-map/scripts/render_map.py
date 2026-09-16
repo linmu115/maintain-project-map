@@ -28,8 +28,8 @@ def export_reader(data: dict, output: Path, mode: str = "a", node: str | None = 
         raise ValueError("Reader output must have an .html extension.")
     if output.name.lower() in {p.name for p in diagram_targets(output.parent)}:
         raise ValueError("Reader output cannot use a reserved diagram filename.")
-    if mode not in {"a", "b", "c"}:
-        raise ValueError("Reader mode must be a, b or c.")
+    if mode not in {"a", "b"}:
+        raise ValueError("Reader mode must be a or b.")
     targets = [output, output.parent / "docs.json"]
     if diagrams:
         targets.extend(diagram_targets(output.parent))
@@ -83,7 +83,7 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("manifest", type=Path, help="Project manifest (project.yaml)")
     parser.add_argument("--output", type=Path, help="Default: <manifest directory>/views/index.html")
-    parser.add_argument("--mode", choices=["a", "b", "c"], default="a")
+    parser.add_argument("--mode", choices=["a", "b"], default="a")
     parser.add_argument("--node", help="Node executable for the bundled Archify renderer")
     parser.add_argument("--no-diagrams", action="store_true", help="Export documents only")
     parser.add_argument("--export-only", action="store_true", help="Only write HTML files; do not start a local HTTP reader")

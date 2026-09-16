@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const page = fs.readFileSync(path.resolve(__dirname, '../maintain-project-map/assets/reader.html'), 'utf8');
-const source = page.slice(page.indexOf('function graphHref'), page.indexOf('function card')) + page.slice(page.indexOf('function continuousDiagrams'), page.indexOf('function writeHash'));
+const source = page.slice(page.indexOf('function graphHref'), page.indexOf('function card'));
 const prelude = String.raw`
 const assert = require('node:assert/strict');
 class Elem {
@@ -35,34 +35,10 @@ assert.equal(nodes.find(e=>e.tag==='a'&&e.textContent==='打开完整图').href,
 view=diagram('architecture','unknown');
 assert.equal(flatten(view).filter(e=>e.tag==='iframe').length,0);
 assert.ok(flatten(view).some(e=>e.textContent.includes('尚未关联')));
-view=diagram('architecture','R1',true);
-assert.equal(flatten(view).find(e=>e.tag==='iframe').src,'architecture.html?canvas=1&embed=1#focus=source-native');
-assert.equal(flatten(view).find(e=>e.tag==='a'&&e.textContent==='打开完整图').href,'architecture.html?canvas=1#focus=source-native');
 data.diagrams.architecture={file:null,canonical_file:'old.native.html',reason:'Invalid source',errors:[{message:'Bad JSON'}]};
 view=diagram('architecture');
 assert.equal(flatten(view).filter(e=>['iframe','a'].includes(e.tag)).length,0);
 assert.ok(flatten(view).some(e=>e.textContent==='Bad JSON'));
-// Exercise the actual C disclosure for a workflow-only project. Its graph is
-// loaded once on expansion and uses the native workflow focus protocol.
-const state={focus:'R1'},kindNames={module:'Module'};
-const visible=()=>[{id:'R1',kind:'module',title:'整理内容',body_html:'<p>说明</p>'}];
-const sidebar=()=>el('aside'),heading=()=>el('h1'),prose=()=>el('article'),toolbar=()=>el('nav'),tags=()=>el('span'),relations=()=>el('div'),source=()=>el('details');
-const recordProse=()=>el('article');
-const actualText=()=>'',gapText=()=>'';
-data.project={name:'工作流项目'};
-data.diagrams={workflow:{file:'workflow.html',nodes:[{id:'organize',record_ids:['R1']}],record_nodes:{R1:['organize']}}};
-view=viewC();
-const disclosure=flatten(view).find(e=>e.tag==='details'&&e.children.some(c=>c.tag==='summary'&&c.textContent.includes('功能路径')));
-assert.equal(flatten(view).filter(e=>e.tag==='iframe').length,0);
-disclosure.open=true;disclosure.listeners.toggle();
-assert.deepEqual(flatten(view).filter(e=>e.tag==='iframe').map(e=>e.src),['workflow.html?canvas=1&embed=1']);
-disclosure.listeners.toggle();
-assert.equal(flatten(view).filter(e=>e.tag==='iframe').length,1);
-// The chapter's separate entry carries the local record's native node focus.
-const chapter=flatten(view).find(e=>e.tag==='article'&&e.className==='chapter');
-const relatedDisclosure=flatten(chapter).find(e=>e.tag==='details'&&e.children.some(c=>c.tag==='summary'&&c.textContent.includes('功能路径')));
-relatedDisclosure.open=true;relatedDisclosure.listeners.toggle();
-assert.equal(flatten(chapter).find(e=>e.tag==='iframe').src,'workflow.html?canvas=1&embed=1#focus=organize');
-console.log('Native embedding behavior: PASS (A/B/C, multi-node mapping, unmapped, failure, canonical link)');
+console.log('Native embedding behavior: PASS (A/B, multi-node mapping, unmapped, failure, canonical link)');
 `;
 vm.runInNewContext(prelude + source + checks, { require, console }, { timeout: 5000 });

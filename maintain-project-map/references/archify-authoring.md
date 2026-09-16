@@ -4,7 +4,7 @@
 
 ## 资料与嵌入边界
 
-Archify JSON 是图的原始资料，沿用上游 schema；本 Skill 只登记文件和节点关联，并把原生阅读器嵌入 A/B/C。项目 ID、需求与设计正文、实现和验证、来源及记录生命周期是补充资料，不冒充 Archify 的原生字段。上游 lifecycle 是状态机图，migrate 是工作流格式迁移，二者不等于项目记录退役。
+Archify JSON 是图的原始资料，沿用上游 schema；本 Skill 只登记文件和节点关联，并把原生阅读器嵌入 A/B。项目 ID、需求与设计正文、实现和验证、来源及记录生命周期是补充资料，不冒充 Archify 的原生字段。上游 lifecycle 是状态机图，migrate 是工作流格式迁移，二者不等于项目记录退役。
 
 在 project.yaml 中声明需要的图，路径相对该清单：
 
@@ -49,7 +49,7 @@ node "<skill>/assets/vendor/archify/bin/archify.mjs" compare architecture "<sour
 node "<skill>/assets/vendor/archify/bin/archify.mjs" preview workflow "<source>/workflow.json" "<output>/workflow.preview.html" --no-open
 ```
 
-validate/deliver 可把 architecture 换成 workflow。架构证据检查需要时显式传 `--repo-root "<repository>"`。比较的是两份指定图源；版本与工作树选择交给 Git。preview 仅用于需要持续预览的图源编写过程，监听一个指定文件，结束时停止；它与默认 A/B/C HTTP 阅读服务分别工作，不是普通开发的常驻要求。原生 preview 会保留最近成功版本，当前候选失败时不能将旧画面说成本次成功。更多参数按需查 CLI `--help` 或[上游交付说明](../assets/vendor/archify/references/delivery-contract.md)。
+validate/deliver 可把 architecture 换成 workflow。架构证据检查需要时显式传 `--repo-root "<repository>"`。比较的是两份指定图源；版本与工作树选择交给 Git。preview 仅用于需要持续预览的图源编写过程，监听一个指定文件，结束时停止；它与默认 A/B HTTP 阅读服务分别工作，不是普通开发的常驻要求。原生 preview 会保留最近成功版本，当前候选失败时不能将旧画面说成本次成功。更多参数按需查 CLI `--help` 或[上游交付说明](../assets/vendor/archify/references/delivery-contract.md)。
 
 ## 结果与证据
 
