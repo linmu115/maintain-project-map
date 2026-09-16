@@ -62,6 +62,9 @@ class CanvasCameraTests(unittest.TestCase):
     def test_zoom_limits_and_reset_share_native_state(self):
         self.run_scenario("limits")
 
+    def test_return_restores_manual_camera_and_rejects_invalid_values(self):
+        self.run_scenario("restore")
+
     def test_canvas_resize_refits_overview_and_retains_manual_camera(self):
         self.run_scenario("resize")
 

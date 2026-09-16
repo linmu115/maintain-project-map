@@ -16,6 +16,7 @@ class Elem {
 const el=(tag,cls,text)=>new Elem(tag,cls,text),add=(p,...cs)=>{p.append(...cs.filter(Boolean));return p;};
 const button=(text,fn)=>{const e=el('button','',text);e.addEventListener('click',fn);return e;};
 const ProjectMapCanvas={mount:frame=>{const stage=el('div','canvas-stage');stage.append(frame);return stage;}};
+const state={node:''},frames=new Map(),restoringSnapshot=null;
 const navigate=()=>{},historical=new Set(['retired']),statusNames={retired:'已退役'};
 const byId=new Map([['R1',{id:'R1',title:'Record 1'}],['R2',{id:'R2',title:'Record 2'}]]);
 const data={diagrams:{architecture:{file:'architecture.html',canonical_file:'architecture.native.html',title:'Native graph',nodes:[{id:'source-native',label:'Source',record_ids:['R1','R2']},{id:'sink-native',label:'Sink',record_ids:['R1']}],record_nodes:{R1:['source-native','sink-native']},warnings:[{code:'test',message:'Mapping warning'}],source_path:'diagrams/architecture.json',source_sha256:'hash'}}};
@@ -28,9 +29,11 @@ assert.equal(flatten(view).filter(e=>e.tag==='a'&&e.href==='architecture.native.
 view=diagram('architecture','R1');
 let nodes=flatten(view),select=nodes.find(e=>e.tag==='select');
 assert.equal(select.children.length,2);
-assert.equal(nodes.find(e=>e.tag==='iframe').src,'architecture.html?canvas=1#focus=source-native');
+assert.equal(nodes.find(e=>e.tag==='iframe').dataset.targetNode,'source-native');
+assert.equal(nodes.find(e=>e.tag==='iframe').src,'architecture.html?canvas=1');
 select.value='sink-native';select.listeners.change();
-assert.equal(nodes.find(e=>e.tag==='iframe').src,'architecture.html?canvas=1#focus=sink-native');
+assert.equal(nodes.find(e=>e.tag==='iframe').dataset.targetNode,'sink-native');
+assert.ok(!nodes.some(e=>e.className==='chart-links'),'The old drawer must not render');
 assert.equal(nodes.find(e=>e.tag==='a'&&e.textContent==='打开完整图').href,'architecture.html?canvas=1#focus=sink-native');
 view=diagram('architecture','unknown');
 assert.equal(flatten(view).filter(e=>e.tag==='iframe').length,0);

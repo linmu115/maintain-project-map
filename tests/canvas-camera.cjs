@@ -277,6 +277,18 @@ const cases = {
     h.view.zoomIn(); close(h.view.state().scale, 1);
     h.view.reset(); assert.equal(h.view.state().mode, 'overview');
   },
+  restore() {
+    const h = camera();
+    h.dispatch(h.container, 'wheel', { deltaY: 210 }); h.drag(113,-87);
+    const saved = comparable(h.view.state());
+    h.view.centerAt(700,280,{scale:2,instant:true});
+    assert.equal(h.view.restore(saved),true);
+    assert.deepEqual(comparable(h.view.state()),saved);
+    assert.equal(h.view.restore({scale:NaN,x:0,y:0}),false);
+    assert.deepEqual(comparable(h.view.state()),saved);
+    h.view.restore({scale:1,x:0,y:0,mode:'overview'});
+    assert.equal(h.view.state().mode,'overview');
+  },
   resize() {
     const h = camera();
     assert.equal(h.observers.length, 1);

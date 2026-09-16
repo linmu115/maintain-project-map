@@ -175,6 +175,12 @@ class DiagramTests(unittest.TestCase):
                 canonical = (root / "views" / spec["canonical_file"]).read_bytes()
                 self.assertIn(b'id="project-map-light-theme"', page)
                 self.assertNotIn(b'id="project-map-light-theme"', canonical)
+                passport = re.search(rb'<script id="project-map-diagram-data" type="application/json">(.*?)</script>', page, re.S)
+                self.assertIsNotNone(passport)
+                mappings = json.loads(passport.group(1))['nodes']
+                first = next(iter(original[kind]['node_records']))
+                self.assertEqual([r['id'] for r in mappings[first]], ['MOD-locate', 'MOD-records'])
+                self.assertNotIn(b'id="project-map-diagram-data"', canonical)
                 self.assertIn(b'data-theme="light"', page)
                 self.assertEqual(spec["record_nodes"], original[kind]["record_nodes"])
                 self.assertEqual(spec["archify_commit"], PIN)

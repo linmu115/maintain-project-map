@@ -58,12 +58,13 @@ def export_reader(data: dict, output: Path, mode: str = "a", node: str | None = 
     payload["linked_documents"] = links.render_documents(markdown_html)
     protect_targets({**data, "source_files": data.get("source_files", []) + list(links.documents.values())}, targets)
     if diagrams:
-        payload["diagrams"] = render_diagrams(data, output.parent, node=node)
+        payload["diagrams"] = render_diagrams(data, output.parent, node=node, reader_file=output.name)
     else:
         payload["diagrams"] = {kind: {"file": None, "reason": "本次仅导出了阅读文档。"} for kind in ("architecture", "workflow")}
     template = (ASSETS / "reader.html").read_text(encoding="utf-8")
     template = template.replace("__PROJECT_MAP_READER_STYLE__", (ASSETS / "reader.css").read_text(encoding="utf-8"))
     template = template.replace("__PROJECT_MAP_CANVAS_INTERACTION__", (ASSETS / "canvas-interaction.js").read_text(encoding="utf-8"))
+    template = template.replace("__PROJECT_MAP_HISTORY__", (ASSETS / "reader-history.js").read_text(encoding="utf-8"))
     rendered = template.replace("__PROJECT_MAP_DATA__", safe_json(payload))
     with tempfile.NamedTemporaryFile("w", suffix=".html", prefix=".reader-", encoding="utf-8", dir=output.parent, delete=False) as handle:
         handle.write(rendered)

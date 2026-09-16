@@ -17,6 +17,7 @@ import tempfile
 
 from canvas_adapter import adapt_canvas
 
+ASSETS = Path(__file__).resolve().parent.parent / "assets"
 VENDOR = Path(__file__).resolve().parent.parent / "assets" / "vendor" / "archify"
 PIN = "d673e8300df60a5c8166abe78787fdc78f6b8000"
 KINDS = ("architecture", "workflow")
@@ -101,7 +102,7 @@ def _commit_bundle(staging: Path, output_dir: Path, kind: str) -> None:
         raise
 
 
-def render_diagrams(data: dict, output_dir: Path, node: str | None = None) -> dict:
+def render_diagrams(data: dict, output_dir: Path, node: str | None = None, reader_file: str = "index.html") -> dict:
     output_dir = Path(output_dir).resolve()
     protect_targets(data, diagram_targets(output_dir))
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -158,7 +159,16 @@ def render_diagrams(data: dict, output_dir: Path, node: str | None = None) -> di
                     raise RuntimeError("Archify receipt does not match canonical artifact bytes.")
                 if native_receipt.get("specification", {}).get("sha256") != _sha(raw):
                     raise RuntimeError("Archify receipt does not match source snapshot bytes.")
-                styled = _style_export(original.decode("utf-8")).encode("utf-8")
+                by_id = {r["id"]: r for r in data.get("records", [])}
+                passport = {"reader": reader_file, "diagram": kind, "nodes": {
+                    native_id: [{"id": record_id, "title": by_id[record_id]["title"], "status": by_id[record_id].get("status", "current")}
+                                for record_id in record_ids if record_id in by_id]
+                    for native_id, record_ids in bindings.items()}}
+                encoded = json.dumps(passport, ensure_ascii=False).replace("<", "\\u003c").replace("&", "\\u0026")
+                bridge = (ASSETS / "diagram-records.js").read_text(encoding="utf-8")
+                extra = ('<script id="project-map-diagram-data" type="application/json">' + encoded + '</script>\n'
+                         '<script id="project-map-diagram-records">' + bridge + '</script>\n')
+                styled = _style_export(original.decode("utf-8")).replace("</body>", extra + "</body>", 1).encode("utf-8")
                 (stage / (kind + ".html")).write_bytes(styled)
                 receipt = {"schema": "project-map/archify-delivery/v1", "archify_commit": PIN,
                            "source": {"path": source["source_path"], "sha256": _sha(raw)},
@@ -166,7 +176,7 @@ def render_diagrams(data: dict, output_dir: Path, node: str | None = None) -> di
                            "canonical": {"file": canonical.name, "sha256": _sha(original),
                                          "validation": "native-deliver"},
                            "embedded": {"file": kind + ".html", "sha256": _sha(styled),
-                                        "adaptation": "project-map-fixed-viewport-v6", "visual_review": "not-performed"},
+                                        "adaptation": "project-map-passport-navigation-v7", "visual_review": "not-performed"},
                            "note": "Native receipt paths refer to temporary delivery staging; retained files are named above."}
                 (stage / (kind + ".receipt.json")).write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
                 _commit_bundle(stage, output_dir, kind)

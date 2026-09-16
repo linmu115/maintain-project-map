@@ -95,5 +95,5 @@
     entries.clear();
   }
 
-  global.ProjectMapCanvas = Object.freeze({ mount, deactivateAll, reset });
+  global.ProjectMapCanvas = Object.freeze({ mount, deactivateAll, reset, activate: frame => { const entry=mounted.get(frame); if(entry)activate(entry); } });
 })(globalThis);

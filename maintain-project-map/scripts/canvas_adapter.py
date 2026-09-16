@@ -59,6 +59,16 @@ def adapt_canvas(page: str) -> str:
         }""")
     camera = _replace(camera, "      function sampleRenderedState() {", """      function sampleRenderedState() {
         if (canvasMode) return { scale: state.scale, x: state.x, y: state.y, mode: state.mode };""")
+    camera = _replace(camera, "        state: function () { return { scale: state.scale, x: state.x, y: state.y, mode: state.mode }; }", """        restore: function (saved) {
+          if (!saved || ![saved.scale, saved.x, saved.y].every(Number.isFinite)) return false;
+          stopCameraMotion('restored', false);
+          state = { scale: Math.max(minimumZoom, Math.min(maximumZoom, saved.scale)), x: saved.x, y: saved.y,
+            mode: saved.mode === 'overview' ? 'overview' : 'manual' };
+          apply();
+          if (Archify.focus && Archify.focus.reposition) Archify.focus.reposition();
+          return true;
+        },
+        state: function () { return { scale: state.scale, x: state.x, y: state.y, mode: state.mode }; }""")
     camera = _replace(camera, "x: contentOffsetX + minX * contentScale,", "x: contentOffsetX + (minX - (canvasMode ? viewBox.x : 0)) * contentScale,")
     camera = _replace(camera, "y: contentOffsetY + minY * contentScale,", "y: contentOffsetY + (minY - (canvasMode ? viewBox.y : 0)) * contentScale,")
     camera = _replace(camera, "      function clipToViewport(camera) {", """      function clipToViewport(camera) {
@@ -128,6 +138,7 @@ def adapt_canvas(page: str) -> str:
       }
       container.addEventListener('pointerup', onPointerEnd);""")
     page = page[:start] + camera + page[end:]
+    page = _replace(page, "}) && options.toggle !== false) {", "}) && options.toggle !== false && !chip.hidden) {")
     # Full-graph exports must not retain the interactive content transform.
     page = _replace(page, "        clone.style.removeProperty('clip-path');", """        clone.style.removeProperty('clip-path');
         var contentPlane = clone.querySelector('[data-map-content]');

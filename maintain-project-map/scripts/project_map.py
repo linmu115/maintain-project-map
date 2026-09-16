@@ -286,6 +286,14 @@ def _record(meta: dict, body: str, path: Path, line: int, end: int, owned: bool,
     r.setdefault("status", "current")
     r.setdefault("progress", "")
     r.setdefault("gap", "")
+    if r["kind"] == "update":
+        date = _required(r, "date", str(path))
+        try:
+            if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date):
+                raise ValueError("date format")
+            datetime.strptime(date, "%Y-%m-%d")
+        except ValueError as exc:
+            raise MapError(f"{path}: update date must be YYYY-MM-DD") from exc
     aliases = _list(r.get("aliases", []), f"{path}: aliases")
     if not all(isinstance(alias, str) for alias in aliases):
         raise MapError(f"{path}: aliases must contain strings")
@@ -743,7 +751,10 @@ def _find(doc: dict, record_id: str) -> dict:
 
 
 def _brief(record: dict) -> dict:
-    return {k: record[k] for k in ("id", "kind", "title", "summary", "status", "progress", "gap", "aliases", "path", "line", "end_line")}
+    result = {k: record[k] for k in ("id", "kind", "title", "summary", "status", "progress", "gap", "aliases", "path", "line", "end_line")}
+    if record["kind"] == "update":
+        result["date"] = record["date"]
+    return result
 
 
 def search_project(doc: dict, query: str, limit: int = 8, current_only: bool = False) -> dict:
@@ -755,6 +766,8 @@ def search_project(doc: dict, query: str, limit: int = 8, current_only: bool = F
         if current_only and r["status"] in HISTORICAL:
             continue
         fields = {"id": r["id"], "title": r["title"], "aliases": "\n".join(r["aliases"]), "summary": str(r["summary"]), "body": r["body"]}
+        if r["kind"] == "update":
+            fields["date"] = r["date"]
         reasons = [key for key, value in fields.items() if q in value.casefold()]
         if reasons:
             priority = 0 if q == r["id"].casefold() else 1 if "aliases" in reasons or "title" in reasons else 2

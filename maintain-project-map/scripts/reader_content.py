@@ -16,7 +16,7 @@ FOLDER_TITLES = {
     "integrations": "接入说明", "dependencies": "外部依赖", "adapters": "适配接口",
     "requirements": "需求", "requirement": "需求", "objects": "对象", "object": "对象",
     "implementation": "实际实现", "verification": "验证记录", "decisions": "设计决定",
-    "decision": "设计决定", "exploration": "探索", "notes": "说明",
+    "decision": "设计决定", "exploration": "探索", "notes": "说明", "updates": "更新记录",
 }
 TEXT_SUFFIXES = {".md", ".markdown", ".txt", ".rst", ".ts", ".tsx", ".js", ".jsx",
                  ".mjs", ".cjs", ".py", ".json", ".yaml", ".yml", ".toml", ".css",
@@ -107,6 +107,14 @@ class LocalDocuments:
         context = Path(context_path).resolve()
 
         def resolve(label, destination, wiki=False):
+            if not wiki and destination.startswith("map-node:"):
+                kind, separator, node = destination[len("map-node:"):].partition("/")
+                if kind in {"architecture", "workflow"} and separator and node.strip():
+                    node = unquote(node)
+                    href = "#" + urlencode({"mode": "a", "panel": kind, "node": node})
+                    return ('<a href="' + html.escape(href, quote=True) + '" data-map-diagram="' + kind
+                            + '" data-map-node="' + html.escape(node, quote=True) + '">' + html.escape(label) + '</a>')
+                return None
             if wiki:
                 name, _, section = destination.partition("#")
                 anchor = heading_slug(unquote(section))
