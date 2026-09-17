@@ -2,6 +2,14 @@
 
 辅助长期开发的软件、工作流与 Skill 维护项目认识：需求、设计、对象、模块、接口、实现、验证和来源。一项目一地图，原始资料使用 Markdown/YAML 和 Git 保存。
 
+## 演示视频
+
+用 Skill 自身的项目地图演示：展开左栏文档结构、阅读模块与接口、查看 Archify 架构泳道图，以及从图节点打开说明并返回。
+
+[![项目地图实操演示：点击观看视频](docs/media/project-map-demo.png)](https://github.com/linmu115/maintain-project-map/raw/refs/heads/main/docs/media/project-map-demo.mp4)
+
+**[▶ 观看演示视频](https://github.com/linmu115/maintain-project-map/raw/refs/heads/main/docs/media/project-map-demo.mp4)** · 约 55 秒 · 1.5 倍速 · 无旁白
+
 ## 安装到 Codex
 
 将本仓库的 `maintain-project-map` 文件夹复制到用户的 `.codex/skills/` 目录。入口为 [SKILL.md](maintain-project-map/SKILL.md)。在会话中说：
