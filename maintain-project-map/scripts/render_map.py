@@ -14,6 +14,7 @@ from archify_adapter import render_diagrams, diagram_targets, protect_targets
 from reader_content import LocalDocuments, build_navigation
 from reader_markdown import markdown_html
 from project_map import normalize_relations
+from development_history import prepare_export, evidence_renderer
 
 ASSETS = Path(__file__).resolve().parent.parent / "assets"
 READER_VERSION = "system-map-v1"
@@ -31,12 +32,18 @@ def export_reader(data: dict, output: Path, mode: str = "a", node: str | None = 
         raise ValueError("Reader output cannot use a reserved diagram filename.")
     if mode not in {"a", "b"}:
         raise ValueError("Reader mode must be a or b.")
-    targets = [output, output.parent / "docs.json"]
+    history, history_assets = prepare_export(data)
+    history_captures = history.pop("_captures")
+    targets = [output, output.parent / "docs.json", output.parent / "history-assets.json"]
+    targets.extend(output.parent / name for name in history_assets)
+    if any(not target.resolve().is_relative_to(output.parent) for target in targets):
+        raise ValueError("Reader assets must stay within the export directory.")
     if diagrams:
         targets.extend(diagram_targets(output.parent))
     protect_targets(data, targets)
     output.parent.mkdir(parents=True, exist_ok=True)
     payload = dict(data)
+    payload["development_history"] = history
     payload["reader_version"] = READER_VERSION
     if data["project"].get("kind") == "system":
         from system_map import compose_system
@@ -52,7 +59,10 @@ def export_reader(data: dict, output: Path, mode: str = "a", node: str | None = 
     payload["map_html"] = markdown_html(data.get("map_body", ""), links.renderer(links.map_path), "map")
     payload["records"] = []
     for record in data.get("records", []):
-        item = {**record, "body_html": markdown_html(record.get("body", ""), links.renderer(record["path"], record["id"]), record["id"])}
+        resolver = links.renderer(record["path"], record["id"])
+        if record["kind"] in {"history", "experience"}:
+            resolver = evidence_renderer(resolver, record, history["tasks"][record.get("task_id", record["id"])])
+        item = {**record, "body_html": markdown_html(record.get("body", ""), resolver, record["id"])}
         # Source bytes and fingerprint must come from the same load snapshot.
         # A table binding can project fields into body while source_text retains
         # its original row. Do not read the path again after load_project.
@@ -71,7 +81,13 @@ def export_reader(data: dict, output: Path, mode: str = "a", node: str | None = 
     template = template.replace("__PROJECT_MAP_CANVAS_INTERACTION__", (ASSETS / "canvas-interaction.js").read_text(encoding="utf-8"))
     template = template.replace("__PROJECT_MAP_HISTORY__", (ASSETS / "reader-history.js").read_text(encoding="utf-8"))
     template = template.replace("/*__PROJECT_MAP_SYSTEM_READER__*/", (ASSETS / "system-reader.js").read_text(encoding="utf-8"))
+    template = template.replace("/*__PROJECT_MAP_DEVELOPMENT_HISTORY__*/", (ASSETS / "development-history.js").read_text(encoding="utf-8"))
     rendered = template.replace("__PROJECT_MAP_DATA__", safe_json(payload))
+    for name, value in history_assets.items():
+        target = output.parent / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(safe_json(value) + "\n", encoding="utf-8")
+    (output.parent / "history-assets.json").write_text(safe_json({"files": sorted(history_assets), "captures": history_captures}) + "\n", encoding="utf-8")
     with tempfile.NamedTemporaryFile("w", suffix=".html", prefix=".reader-", encoding="utf-8", dir=output.parent, delete=False) as handle:
         handle.write(rendered)
         temp = Path(handle.name)

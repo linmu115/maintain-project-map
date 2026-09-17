@@ -106,6 +106,9 @@ archify:
       - MOD-updates
       - IF-update-record
       - IMP-passport-updates-history
+      - MOD-development-history
+      - REQ-development-history
+      - IMP-development-history
       archify-native:
       - MOD-archify
       - REQ-native-archify
@@ -122,6 +125,8 @@ archify:
       - MOD-locate
       - IF-project-location
       - OBJ-map-identity
+      - IMP-map-catalog
+      - VER-map-catalog
       document-navigation:
       - MOD-document-navigation
       - IF-document-links

@@ -23,7 +23,7 @@ class CanvasActivationTests(unittest.TestCase):
     def check(self, scenario):
         result = subprocess.run(
             [self.node, str(self.runner), str(self.script), scenario],
-            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0), capture_output=True, encoding="utf-8", timeout=20,
+            capture_output=True, encoding="utf-8", timeout=20,
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertTrue(json.loads(result.stdout)["passed"])

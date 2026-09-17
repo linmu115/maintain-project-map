@@ -20,7 +20,7 @@ Python 3.10+ 用于记录操作，安装 `maintain-project-map/requirements.txt`
 
 ## 包含的能力
 
-- 稳定项目 ID 与本机位置登记，跨项目用简短 ID 引用。
+- 稳定项目 ID 与本机位置登记；支持按项目名称或别名找到地图，区分工作树、默认副本与失效位置，跨项目用简短 ID 引用。
 - [系统地图](maintain-project-map/references/system-maps.md)：明确收录独立项目，派生接口目录和交叉关系；系统图的项目护照通过“进入项目”新开完整项目阅读页，原标签页保持位置。含[可运行示例](maintain-project-map/examples/system-map/README.md)。
 - 绑定已有需求文档的章节或表格行，避免复制一套规格。
 - 按需采用[组合项目与扩展接口](maintain-project-map/references/composite-projects.md)的组织指引：职责层级、提供方唯一合同、具体能力的接入依据，以及 Archify 模块边界和泳道。
@@ -31,6 +31,7 @@ Python 3.10+ 用于记录操作，安装 `maintain-project-map/requirements.txt`
 - 按需生成两种人读页面：项目概览、项目条目。白色为主的阅读界面、独立滚动、文档内按点击激活的画布。
 - 复用固定版本 Archify 的图模型、校验和阅读器，保留原版及嵌入副本。画布视窗固定，内部内容缩放和平移。
 - 图节点对应的条目直接进入语义护照；顶栏返回恢复页面、滚动与图中视野。正文可链接并居中图卡片。
+- [开发历程](maintain-project-map/references/development-history.md)提供按问题查找与按任务回顾，保存排错、改进、验证和人工纠偏经验；更新地图时主动同步本次过程，原会话证据按需展开。
 - [更新记录](maintain-project-map/references/update-records.md)保存用户明确要求留存的迭代，按日期浏览；普通维护不会自动追加。
 
 本地 HTTP 服务仅用于阅读导出快照。页面操作不调用模型；提问继续使用原会话。没有长期对照证据证明 Skill 已降低 token 成本或提高开发成功率。
@@ -45,7 +46,7 @@ Python 3.10+ 用于记录操作，安装 `maintain-project-map/requirements.txt`
 python maintain-project-map/scripts/render_map.py docs/project/project.yaml
 ```
 
-命令返回本机 HTTP 阅读地址。HTML、运行端口和预览回执可重新生成，不提交到仓库；无需开发者原有目录或个人会话文件。GitHub 上可直接阅读 Markdown，Wiki 条目链接和图节点交互由生成的阅读器提供。
+命令返回本机 HTTP 阅读地址。HTML、运行端口和预览回执可重新生成，不提交到仓库；普通地图阅读无需开发者原有目录或个人会话文件；开发历程的原文展开需对应的原始会话仍在本机，缺失时保留过程叙述并明确提示来源不可用。GitHub 上可直接阅读 Markdown，Wiki 条目链接和图节点交互由生成的阅读器提供。
 
 ## 开发与检查
 

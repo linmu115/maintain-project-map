@@ -56,6 +56,25 @@ class PreviewTests(unittest.TestCase):
         self.assertEqual((first["pid"], first["url"]), (second["pid"], second["url"]))
         self.assertEqual(fetch(second["url"])[1].decode(), "<h1>更新后的地图</h1>")
 
+    def test_history_only_serves_explicit_exported_assets(self):
+        filename = "history/" + "a" * 20 + "/index.json"
+        path = self.entry.parent / filename
+        path.parent.mkdir(parents=True)
+        path.write_text('{"text":"visible evidence"}', encoding="utf-8")
+        unlisted = path.with_name("EVT-" + "c" * 20 + "-0.json")
+        unlisted.write_text('{"text":"not exported"}', encoding="utf-8")
+        assets = self.entry.parent / "history-assets.json"
+        assets.write_text(json.dumps({"files": [filename, "../private.json"]}), encoding="utf-8")
+        url = start_reader(self.entry)["url"]
+        self.assertEqual(json.loads(fetch(url + filename)[1])["text"], "visible evidence")
+        for target in [filename.replace("index.json", "EVT-" + "c" * 20 + "-0.json"), "history-assets.json", "../private.json", "history/test/events.jsonl"]:
+            with self.assertRaises(HTTPError) as error:
+                fetch(url + target)
+            self.assertEqual(error.exception.code, 404)
+        assets.write_text('{"files":[]}', encoding="utf-8")
+        with self.assertRaises(HTTPError):
+            fetch(url + filename)
+
     def test_unlisted_files_traversal_host_and_origin_are_denied(self):
         (self.entry.parent / "private.txt").write_text("not served")
         url = start_reader(self.entry)["url"]
@@ -96,7 +115,7 @@ class PreviewTests(unittest.TestCase):
 
     def test_two_processes_start_one_service(self):
         command = [sys.executable, "-B", str(SCRIPTS / "serve_map.py"), "start", str(self.entry)]
-        children = [subprocess.Popen(command, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0), stdout=subprocess.PIPE, stderr=subprocess.PIPE) for _ in range(2)]
+        children = [subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE) for _ in range(2)]
         results = []
         for child in children:
             out, err = child.communicate(timeout=15)
@@ -110,13 +129,13 @@ class PreviewTests(unittest.TestCase):
         init_project(project, "阅读样例", kind="skill")
         command = [sys.executable, "-B", str(SCRIPTS / "render_map.py"), str(project),
                    "--no-diagrams", "--output", str(self.entry)]
-        result = subprocess.run(command, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0), capture_output=True, timeout=15)
+        result = subprocess.run(command, capture_output=True, timeout=15)
         self.assertEqual(result.returncode, 0, result.stderr.decode("utf-8"))
         payload = json.loads(result.stdout)
         self.assertEqual(payload["preview"]["status"], "running")
         self.assertEqual(fetch(payload["url"])[0], 200)
         stop_reader(self.entry)
-        result = subprocess.run(command + ["--export-only"], creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0), capture_output=True, timeout=15)
+        result = subprocess.run(command + ["--export-only"], capture_output=True, timeout=15)
         self.assertEqual(result.returncode, 0, result.stderr.decode("utf-8"))
         self.assertNotIn("preview", json.loads(result.stdout))
         self.assertEqual(reader_status(self.entry)["status"], "stopped")

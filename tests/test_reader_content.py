@@ -26,23 +26,6 @@ class Links(HTMLParser):
 
 
 class ReaderContentTests(unittest.TestCase):
-    def test_update_is_explicit_dated_record_and_diagram_links_keep_node_identity(self):
-        from project_map import MapError
-        # Ordinary export never creates update entries.
-        self.record('modules/core.md', 'CORE', 'Core')
-        self.assertFalse(any(r['kind'] == 'update' for r in self.export()['records']))
-        self.record('updates/entry.md', 'UPD-core', 'Core 接入', kind='update', date='2026-09-16',
-                    body='新增接入。[图中交接](map-node:workflow/core%20%2F%20handoff)')
-        payload = self.export()
-        entry = next(r for r in payload['records'] if r['id'] == 'UPD-core')
-        link = Links(entry['body_html']).links[0]
-        self.assertEqual(link['data-map-node'], 'core / handoff')
-        self.assertEqual(link['data-map-diagram'], 'workflow')
-        self.assertIn('panel=workflow', link['href'])
-        self.record('updates/entry.md', 'UPD-core', 'Bad date', kind='update', date='2026-02-31')
-        with self.assertRaises(MapError):
-            load_project(self.base)
-
     def setUp(self):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)

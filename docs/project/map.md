@@ -45,3 +45,11 @@ Archify 提供原生图模型与交互，Mistune 处理 Markdown，Git 保存版
 ## 留存迭代与往返阅读
 
 需要记住一次功能迭代时，在会话中明确要求加入 [[MOD-updates|更新记录]]。图卡片的语义护照可直接打开对应条目，顶栏返回恢复此前阅读位置；变化涉及图时，更新正文能直接定位卡片，见 [[IMP-passport-updates-history|护照、图定位与返回说明]]。
+
+## 沿开发历程回看尝试与转折
+
+[[MOD-development-history|开发历程]]在原 HTML 的更新记录下方提供任务过程。先读问题、尝试、反馈与结果，再展开必要依据；工具原文继续由 Codex 保存，地图只维护定位。模型自主选择候选、片段或继续读取，见 [[IF-history-query|按需查询]] 与 [[IMP-development-history|当前实现]]。
+
+本次能力变化已收录为 [[UPD-development-history|开发历程功能更新]]。
+
+现在可按问题筛选经验，或按任务回顾全程。本项目的真实过程见 [[HIST-source-reuse|开发历程如何改为按需取证]]；独立查阅 [[EXP-source-reuse|用户纠偏怎样改变保存方式]] 和 [[EXP-evidence-boundaries|读取范围与来源失效的核对]]。同一经验在多个类别下保持独立导航位置，共用正文与依据。

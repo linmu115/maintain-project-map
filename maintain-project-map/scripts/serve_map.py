@@ -110,6 +110,21 @@ def start_reader(entry):
         if receipt.exists() and (receipt.is_symlink() or previous.get("schema") != SCHEMA or previous.get("entry") != str(entry)):
             raise ValueError(f"Existing preview receipt is not owned by this entry; preserved: {receipt}")
         existing = live_state(entry)
+        if existing and existing.get("history_assets_version", 0) < 2:
+            try:
+                needs_history = bool(json.loads((entry.parent / "history-assets.json").read_text(encoding="utf-8")).get("files"))
+            except (OSError, ValueError, AttributeError):
+                needs_history = False
+            if needs_history:
+                acknowledgement = request_control(existing, "stop", "POST")
+                if not acknowledgement or acknowledgement.get("token") != existing["token"]:
+                    raise RuntimeError("Existing preview could not upgrade for lazy history assets; HTML remains available")
+                deadline = time.monotonic() + 3
+                while request_control(existing, "health") is not None and time.monotonic() < deadline:
+                    time.sleep(0.05)
+                if request_control(existing, "health") is not None:
+                    raise RuntimeError("Previous preview has not stopped yet")
+                existing = None
         if existing:
             return public_state(existing, reused=True)
         token = secrets.token_hex(16)
@@ -238,11 +253,29 @@ def run_server(entry, token):
                 return
             if target == "":
                 target = entry.name
-            if target not in allowed:
+            if re.fullmatch(r"history/[a-f0-9]{20}/EVT-[a-f0-9]{20}-\d+\.json", target):
+                try:
+                    from development_history import read_export_packet
+                    packet = read_export_packet(entry.parent, target)
+                    self.send_bytes(200, json.dumps(packet, ensure_ascii=False).encode(), "application/json; charset=utf-8")
+                except KeyError:
+                    self.send_bytes(404, b"Not found")
+                except (OSError, ValueError) as exc:
+                    self.send_bytes(409, json.dumps({"error": str(exc)}, ensure_ascii=False).encode(), "application/json; charset=utf-8")
+                return
+            history_asset = False
+            if re.fullmatch(r"history/[a-f0-9]{20}/(?:index|EVT-[a-f0-9]{20}-\d+)\.json", target):
+                try:
+                    manifest = entry.parent / "history-assets.json"
+                    if not manifest.is_symlink():
+                        history_asset = target in json.loads(manifest.read_text(encoding="utf-8")).get("files", [])
+                except (OSError, ValueError, AttributeError):
+                    pass
+            if target not in allowed and not history_asset:
                 self.send_bytes(404, b"Not found")
                 return
             path = entry.parent / target
-            if path.is_symlink() or not path.is_file() or path.resolve().parent != entry.parent:
+            if path.is_symlink() or not path.is_file() or not path.resolve().is_relative_to(entry.parent) or (not history_asset and path.resolve().parent != entry.parent):
                 self.send_bytes(404, b"Not found")
                 return
             try:
@@ -270,7 +303,7 @@ def run_server(entry, token):
     server.timeout = 0.3
     server.last_request = time.monotonic()
     port = server.server_address[1]
-    state.update(schema=SCHEMA, entry=str(entry), token=token, pid=os.getpid(), port=port,
+    state.update(schema=SCHEMA, entry=str(entry), token=token, pid=os.getpid(), port=port, history_assets_version=2,
                  url=f"http://localhost:{port}/{token}/")
     receipt = receipt_path(entry)
     try:

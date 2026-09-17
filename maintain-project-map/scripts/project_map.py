@@ -287,14 +287,27 @@ def _record(meta: dict, body: str, path: Path, line: int, end: int, owned: bool,
     r.setdefault("status", "current")
     r.setdefault("progress", "")
     r.setdefault("gap", "")
-    if r["kind"] == "update":
+    if r["kind"] in {"update", "history", "experience"}:
         date = _required(r, "date", str(path))
         try:
             if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date):
                 raise ValueError("date format")
             datetime.strptime(date, "%Y-%m-%d")
         except ValueError as exc:
-            raise MapError(f"{path}: update date must be YYYY-MM-DD") from exc
+            raise MapError(f"{path}: {r['kind']} date must be YYYY-MM-DD") from exc
+    if r["kind"] in {"history", "experience"}:
+        for field in ("outcome", "applicability", "coverage_note"):
+            _required(r, field, str(path))
+        for field in ("modules", "related_records"):
+            values = _list(r.get(field, []), f"{path}: {field}")
+            if not all(isinstance(value, str) for value in values):
+                raise MapError(f"{path}: {field} must contain strings")
+    if r["kind"] == "experience":
+        _required(r, "task_id", str(path))
+    if r["kind"] == "history":
+        capture = r.get("history")
+        if not isinstance(capture, dict) or not isinstance(capture.get("path"), str) or not re.fullmatch(r"[a-f0-9]{64}", str(capture.get("sha256", ""))):
+            raise MapError(f"{path}: history.path and history.sha256 are required")
     aliases = _list(r.get("aliases", []), f"{path}: aliases")
     if not all(isinstance(alias, str) for alias in aliases):
         raise MapError(f"{path}: aliases must contain strings")
@@ -741,6 +754,14 @@ def resolve_project(project_id: str, registry: str | Path | None = None, *, mani
             matching = [p for p in candidates if _git_version(Path(p).parent, include_dirty=False).get("git_root") == current_root]
     if len(matching) == 1:
         return {"status": "resolved", "project_id": project_id, "manifest_path": matching[0], "selection": "current_location"}
+    preferred = entry.get("preferred_manifest")
+    if preferred and not matching:
+        preferred = str(Path(preferred).expanduser().resolve())
+        if preferred in candidates:
+            return {"status": "resolved", "project_id": project_id, "manifest_path": preferred, "selection": "preferred_location"}
+        return {"status": "unresolved", "project_id": project_id, "locations": candidates,
+                "missing_locations": missing, "mismatched_locations": mismatched,
+                "reason": "Preferred location unavailable; choose an explicit manifest/worktree"}
     if len(candidates) == 1:
         return {"status": "resolved", "project_id": project_id, "manifest_path": candidates[0], "selection": "only_location"}
     return {"status": "ambiguous" if candidates else "unresolved", "project_id": project_id,

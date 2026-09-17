@@ -210,7 +210,7 @@
       "id": "project-location",
       "type": "backend",
       "label": "项目身份与位置",
-      "sublabel": "稳定 ID · 本机登记表",
+      "sublabel": "名称与别名 · ID · 本机目录",
       "pos": [
         450,
         650

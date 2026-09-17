@@ -4,6 +4,20 @@
 
 ## 定位与接入
 
+用户提供项目名而没有路径时，先查本机登记；定位不读取记录正文：
+
+```text
+python "<skill>/scripts/map_catalog.py" locate "Archify" --limit 5
+python "<skill>/scripts/map_catalog.py" register "docs/project/project.yaml" --alias "常用简称"
+python "<skill>/scripts/map_catalog.py" list --limit 8 --offset 0
+```
+
+`map_catalog.py` 复用下述本机注册表，兼容已有 `project_map.py register/resolve`。查询先匹配 ID，再精确匹配名称/别名，最后匹配名称子串；同名的多个项目返回候选，不按首项选择。默认最多 8 项、上限 50，`next_offset` 表示还有候选；只检查当前页的清单和阅读入口，不读地图正文、日志或外部地图。`list` 同时检查路径可用性，可用于搬迁后的核对。状态 resolved 只表示找到清单，`missing_entrypoints` 仍需单独处理，不证明地图内容已验证。
+
+多个位置先匹配 `--current` 指定的工作目录（默认当前目录）或 Git 工作树。明确知道常用工作副本时，用 `register ... --preferred` 登记默认位置；其他上下文仍可以选择当前工作树。没有明确默认且多个位置可用则返回 ambiguous。默认位置失效时返回 unresolved，保留可用候选供核对，不悄悄打开另一份旧副本。坏清单和身份不符只标记该位置，不中断其他项目查询；按 `manifest_path` 显式使用的权威位置优先于名称查询。
+
+新增、接入、移动或实质更新地图后，运行 register 更新名称与位置；`--alias` 可重复使用，合并原别名，重复登记不重写文件。项目迁移沿用原 `project_id`；同名但 ID 不同的地图不合并。注册表采用带锁的原子写入，锁冲突会明确失败，不覆盖其他写入者。自动维护是使用 Skill 时的职责，没有后台全盘监听。仅登记真实项目地图；样例、测试、导出快照和候选版本可在盘点说明中列出排除原因。MRS 的 `.mrs-project.json` 不属于该目录格式。
+
 已有清单时直接使用其路径。新项目在选定的地图目录初始化，再由 LLM 绑定已有文档并填写真实的当前目标：
 
 ```text
@@ -87,3 +101,6 @@ Archify 渲染需要 Node.js 18 或以上，无需 npm 安装；脚本查找显�
 图直接使用清单 `archify` 中声明的原生 JSON，调用捆绑上游 CLI 的 `deliver`，没有声明时仅显示缺少图源。图源编写、校验、比较及可选原生预览见[原生 Archify 图源](archify-authoring.md)。`views/architecture.json` 与 `workflow.json` 是本次交付的原文快照，不能作为默认维护源。`.native.html` 保留上游原版，普通 `.html` 是浅色嵌入版，`.receipt.json` 分别记录源、原版和嵌入版哈希。
 
 阅读用法和边界见[开发者阅读页面](reading-and-interaction.md)。页面是带版本与指纹的导出快照；源码更新后按需重新生成。普通开发无需先渲染。
+# 开发历程的可选命令
+
+需要查找排错、改进、验证或人工纠偏经验，或按任务查询公开消息、工具配对和反馈时，见 [开发历程](development-history.md) 中 `development_history.py cases/search/events/read` 的有限读取接口。经验可按类别、尝试结果和模块筛选，再自主展开正文与所属任务的证据。普通 `project_map.py` 查询不会因此读取事件载荷；导入指定来源仅在需要保留该任务时执行。
