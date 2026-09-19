@@ -1,26 +1,59 @@
 ---
-id: IMP-passport-updates-history
-kind: implementation
-title: 语义护照条目入口、更新记录与返回
-status: current
-summary: 原映射抽屉已移入护照，侧栏增加按需更新入口；图链接居中卡片，返回恢复阅读状态。
-sources:
-- path: ../../maintain-project-map/assets/reader.html
-  role: skill-source-authority
-- path: ../../maintain-project-map/assets/diagram-records.js
-  role: skill-source-authority
-- path: ../../maintain-project-map/assets/reader-history.js
-  role: skill-source-authority
-relations:
-- relation: implements
-  to:
-    record_id: REQ-passport-updates-history
-- relation: implements
-  to:
-    record_id: MOD-updates
-- relation: implements
-  to:
-    record_id: MOD-document-navigation
+{
+  "id": "IMP-passport-updates-history",
+  "kind": "implementation",
+  "title": "语义护照条目入口、更新记录与返回",
+  "status": "current",
+  "summary": "原映射抽屉已移入护照，侧栏增加按需更新入口；图链接居中卡片，返回恢复阅读状态。",
+  "sources": [
+    {
+      "path": "maintain-project-map/assets/reader.html",
+      "role": "skill-source-authority",
+      "workspace_id": "source",
+      "reviewed_sha256": "d8a8efae8efe5b4555fa8d896885a0bfde2b444f9f19f5456141e998bb1ed590",
+      "reviewed_dependencies": []
+    },
+    {
+      "path": "maintain-project-map/assets/diagram-records.js",
+      "role": "skill-source-authority",
+      "workspace_id": "source",
+      "reviewed_sha256": "99c1dde3809c661661a545234d639ea80edc170ec576ad040d05d441d4438c73",
+      "reviewed_dependencies": []
+    },
+    {
+      "path": "maintain-project-map/assets/reader-history.js",
+      "role": "skill-source-authority",
+      "workspace_id": "source",
+      "reviewed_sha256": "5ee09ad39b96b7d43fd0fc94c68aa379027e7346a81620d77242d4996822e25d",
+      "reviewed_dependencies": []
+    }
+  ],
+  "relations": [
+    {
+      "relation": "implements",
+      "to": {
+        "record_id": "REQ-passport-updates-history"
+      }
+    },
+    {
+      "relation": "implements",
+      "to": {
+        "record_id": "MOD-updates"
+      }
+    },
+    {
+      "relation": "implements",
+      "to": {
+        "record_id": "MOD-document-navigation"
+      }
+    }
+  ],
+  "source_review": {
+    "reviewed_at": "2026-09-19T08:47:23.192869+00:00",
+    "reason": "核对新增公共静态导出和归档 Git 原字节保护；147 项完整回归与后续 16 项专项通过。其他来源仅统一 LF，Git 内容差异确认未改逻辑，保留原说明并更新跨系统可复用基线。",
+    "body_sha256": "8cf25c4f0fce19111b72d18e1929aeb63c1c21f841ac127b68236c13a558e809"
+  }
+}
 ---
 
 # 语义护照条目入口、更新记录与返回

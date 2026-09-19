@@ -31,6 +31,17 @@ init 只建立最小文件，已有内容不会覆盖。登记使用本机位置
 
 多个工作树共享项目 ID，各自登记位置。显式路径最准确；存在多个合理位置时需要选定具体清单。未登记的外部引用可以保留，不能假装已经解析。
 
+## 可选的本地语义能力
+
+已有配置时直接查询。尚未启用且任务需要同义表达召回时，一次性准备可选依赖和模型：
+
+```text
+python -m pip install -r "<skill>/requirements-semantic.txt"
+python "<skill>/scripts/setup_retrieval.py"
+```
+
+setup 从固定版本的官方模型仓库下载约 95 MB 文件并核对 SHA-256，做本地推理检查后写配置；不启动服务。默认配置是 `~/.codex/config/project-map-retrieval.json`，`PROJECT_MAP_RETRIEVAL_CONFIG` 可指定其他位置；设置 CODEX_HOME 时沿用该根目录。模型与缓存分别在本机 models/project-map、project-maps/semantic 下，不随 Skill 或项目 Git 提交。已有不同配置会保留；需要替换时先检查内容，再显式用 `--replace`。查询不会安装依赖、下载模型或向外发送地图文本。仅词法读取无需这一步。
+
 ## 查询当前记录
 
 ```text
@@ -40,9 +51,29 @@ python "<skill>/scripts/project_map.py" related "docs/project" "IF-example" --li
 python "<skill>/scripts/project_map.py" validate "docs/project"
 ```
 
-search 是中文子串、词面和别名检索，默认可以找历史记录；明确只看当前时用 `--current-only`。read 返回正文、原文件位置与覆盖范围，长记录通过 `--offset` 继续；继续读取时传回先前结果的 `--fingerprint`，若源内容已变则重新定位，避免拼接不同版本。不能把局部读取当成全文。related 仅给出当前地图登记的关系，不递归读其他项目。验证格式和本地链接不等于验证产品实现。
+search 默认排除 retired、merged、superseded、withdrawn、archived 状态；查旧名或历史时加 `--include-history`，`--current-only` 保留为显式写法。空格分隔的关键词可以跨标题、别名、摘要、正文和类型匹配；用 `--kind interface --kind implementation` 限定类型，`--module` 限定模块。精确 ID、标题和别名优先，其他候选按字段与类型排序，背景历程不因词频高占据前排。每项返回实际命中片段，不是模型生成摘要。
 
-脚本从当前源文件读取，不依赖持久语义数据库。外部依赖、未索引内容和动态调用可能需要另行核查。
+`--retrieval auto` 是命令行默认：已配置本地模型时混合词法与语义两路结果，用 RRF 按排名合并，同一记录只占一个候选。精确 ID 直接走词法定位，精确标题和别名保留优先级。`--retrieval lexical` 只查词面；`--retrieval hybrid` 显式要求混合，能力不可用时失败。auto 不可用时返回 `retrieval.status: degraded` 和原因，仍提供词法结果；不会悄悄下载模型或调用远程 API。Python `search_project` 为兼容既有调用默认 lexical，传入 `retrieval="auto"` 或 `"hybrid"` 启用。
+
+词法部分的 `--match auto` 先匹配所有关键词，无结果时尝试中文相邻双字重合或部分关键词，`match_mode` 和 `match` 明示回退。混合模式会扩大中文词面候选池供融合；双字重合仍是字面匹配。`--match all/phrase/any` 选择严格的纯词法规则，与显式 hybrid 不同时使用。两路共享类型、模块和状态范围；结果的 `retrieved_by` 区分 lexical、semantic，片段来自实时原文或元数据。弱词面命中与语义同时存在时，可采用最佳语义片段并标出 `snippet.via`。
+
+混合检索每路最多 50 条去重记录，融合后分页；`total` 是候选并集数量，不是全部相关事实数量。用 `--limit/--offset` 继续，地图改变后重新查。语义最近邻可能返回无关候选，必须读原文确认；问题太宽时补充模块或关键对象。没有命中也不宣称事实不存在。
+
+search/read 默认输出简短视图，完整元数据用 `--detail full`；Python 接口仍返回完整数据。read 保留正文、原位置、状态、缺口、来源定位与覆盖范围。长记录按 `continuation` 中的 `offset` 和 `record_fingerprint` 续读；`--fingerprint` 仍支持整图严格检查。局部读取不代表全文已读。related 仅返回登记关系，不递归读其他项目。格式检查不验证产品实现。
+
+```text
+python "<skill>/scripts/project_map.py" search "docs/project" "接口 查询" --kind interface --limit 5
+python "<skill>/scripts/project_map.py" search "docs/project" "旧接口" --include-history
+python "<skill>/scripts/project_map.py" read "docs/project" "IF-example" --detail full
+```
+
+read 同时展示该记录最多 8 个来源位置；数量超出会提示，完整来源声明仍在 `--detail full` 的记录元数据中。来源路径默认相对 project.yaml；有 `workspace_id` 时相对显式工作区，不猜地图仓库与源码仓库的关系。不返回源码正文或请求远程来源。`availability` 检查文件是否存在，支持的 `symbol` 静态解析后给出 found/missing/ambiguous/unavailable 及行号。来源声明包含 `reviewed_sha256` 时核对至多 4 MiB 的文件，并检查已登记的符号、直接依赖基线；变化为 needs_review，未变为 unchanged_since_review，没有基线为 no_baseline。search/read 同时返回小型 source_health 提示，文件变化不证明说明失效。工作区和基线格式见[资产模型](asset-model.md)。
+
+## 源码发现与说明归档
+
+`bind-workspace` 显式绑定 Git 工作树，`source` 按需刷新并查询入口、导入、静态调用线索、定义、待补登记和待复核记录；人读页面对应“源码入口与依赖”小栏目。`review-record` 保存实际核对后的基线，`archive-record` 保存已确认失效的正文并保留原 ID 的替代入口。默认搜索和读取不会展开归档正文，`read --include-history` 显式展开，续读应保持该标志。具体命令与解析范围见[源码发现与说明归档](source-and-archive.md)。
+
+脚本从当前源文件取正文，混合检索仅复用可重建的本机向量缓存。外部依赖、未索引内容和动态调用可能需要另行核查。
 
 局部检索可先用 `modules <project>` 找模块 ID，再用 `search <project> 关键词 --module MOD-id`。`read` 的 `--record-fingerprint` 只检查当前记录及绑定源，允许无关模块改动后的续读；`--fingerprint` 仍检查整图。部分读取会明确提示尚未打开的约束不能视为已核实。
 

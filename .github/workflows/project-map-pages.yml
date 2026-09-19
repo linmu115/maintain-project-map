@@ -1,0 +1,67 @@
+name: Publish project map
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'maintain-project-map/**'
+      - 'docs/project/**'
+      - 'research/**'
+      - '设计方案.md'
+      - '.github/workflows/project-map-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: project-map-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - uses: actions/configure-pages@v5
+      - name: Install reader dependencies
+        run: python -m pip install -r maintain-project-map/requirements.txt
+      - name: Export public reader
+        run: python maintain-project-map/scripts/render_map.py docs/project/project.yaml --public-root . --output _site/index.html
+      - name: Check publication
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          site = Path('_site')
+          data = json.loads((site / 'docs.json').read_text())
+          assert data['validation']['valid'], data['validation']
+          for kind in ('architecture', 'workflow'):
+              assert data['diagrams'][kind].get('file'), data['diagrams'][kind]
+          registry = json.loads((site / 'history-assets.json').read_text())
+          assert not registry['captures']
+          assert not (site / 'history').exists()
+          (site / '.nojekyll').touch()
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish
+        id: deployment
+        uses: actions/deploy-pages@v4

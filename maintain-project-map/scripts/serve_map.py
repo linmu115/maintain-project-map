@@ -264,7 +264,7 @@ def run_server(entry, token):
                     self.send_bytes(409, json.dumps({"error": str(exc)}, ensure_ascii=False).encode(), "application/json; charset=utf-8")
                 return
             history_asset = False
-            if re.fullmatch(r"history/[a-f0-9]{20}/(?:index|EVT-[a-f0-9]{20}-\d+)\.json", target):
+            if re.fullmatch(r"(?:history/[a-f0-9]{20}/(?:index|EVT-[a-f0-9]{20}-\d+)\.json|archive/[a-f0-9]{20}\.html)", target):
                 try:
                     manifest = entry.parent / "history-assets.json"
                     if not manifest.is_symlink():

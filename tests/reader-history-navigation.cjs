@@ -16,6 +16,7 @@ const records=[{id:'HIST-test',kind:'history',title:'Task',date:'2026-09-17'},
  {id:'EXP-shared',kind:'experience',task_id:'HIST-test',title:'Same source',summary:'small text',categories:['debugging','verification'],results:['failed','passed'],modules:['reader']},
  {id:'EXP-second',kind:'experience',task_id:'HIST-test',title:'Another source',categories:['improvement'],results:['adopted'],modules:['reader']}];
 const data={development_history:{}},byId=new Map(records.map(r=>[r.id,r])),treeOpen=new Map();
+const archivedRecord=r=>r.documentation?.state==='archived'||r.status==='archived';
 const state={mode:'history',historyView:'problems',experience:'',task:'',historyEntry:'',query:'',historyCategory:'',historyResult:'',historyModule:''};
 const flatten=e=>[e,...e.children.flatMap(flatten)];
 let current;const render=()=>{current=historyDirectory(historyCases(),historyRows());},closeNavigation=()=>{};

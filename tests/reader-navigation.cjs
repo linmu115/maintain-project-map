@@ -10,6 +10,7 @@ const byId=new Map([['first',{status:'current',kind:'module'}],['旧 / #1',{stat
 for(const [id,record] of byId)record.id=id;
 const documents=new Map([['doc-contract',{}]]),revealRecord=()=>{};
 const historical=new Set(['superseded']),selected=()=>byId.get(state.focus);
+const archivedRecord=r=>r.documentation?.state==='archived'||r.status==='archived',historicalRecord=r=>historical.has(r.status)||archivedRecord(r);
 const location={hash:''};
 ${source}
 state.mode='b';state.focus='旧 / #1';state.angle='workflow';state.panel='architecture';state.tab='gaps';location.hash=writeHash();

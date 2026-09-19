@@ -1,5 +1,7 @@
 # 项目维护地图 Skill
 
+[在线打开交互地图](https://linmu115.github.io/maintain-project-map/) · [仓库首页](https://github.com/linmu115/maintain-project-map)
+
 ## 它帮助你做什么
 
 长期开发时，把项目能做什么、关键对象、设计原因、接口、当前实现和来源保留下来。忘了可以自己读地图，也可以在原会话里让 LLM 找到有关位置；有新需求或旧功能退出时，继续修订同一份资产。
@@ -15,6 +17,7 @@
 | 文档与模块怎样组织，哪些应拆开 | [记录与绑定](records/modules/records/interfaces/data.md)、[模块层级与扩展接口](records/requirements/composite-projects.md) |
 | 页面、目录树、正文链接和图如何协作 | [阅读模块](records/modules/reader/overview.md)、[目录与文档跳转](records/modules/reader/documents/overview.md)、[Archify 适配](records/modules/reader/diagrams/overview.md) |
 | 阅读地址是什么，为什么需要刷新 | [本机预览](records/modules/reader/preview/overview.md)、[入口与状态](records/modules/reader/preview/interfaces/http.md) |
+| 怎样从 GitHub 直接阅读地图 | [在线地图发布](records/implementation/public-map.md) |
 | 如何找长会话里的原话 | [指定会话检索](records/modules/session/overview.md) |
 | 本次系统地图扩展要做什么，怎样验收 | [功能更新需求：在项目地图上扩展系统地图](records/requirements/system-map.md)、[命令查询与分层披露细则](records/requirements/scoped-disclosure.md) |
 

@@ -1,24 +1,52 @@
 ---
-id: MOD-updates
-kind: module
-title: 开发者选择留存的更新记录
-status: current
-summary: 用户明确要求时留存一轮功能迭代，按日期阅读并跳到相关图卡片。
-sources:
-- path: ../../maintain-project-map/references/update-records.md
-  role: skill-source-authority
-- path: ../../maintain-project-map/assets/reader.html
-  role: skill-source-authority
-relations:
-- relation: contained_by
-  to:
-    record_id: MOD-reader
-- relation: provides
-  to:
-    record_id: IF-update-record
-- relation: implements
-  to:
-    record_id: REQ-passport-updates-history
+{
+  "id": "MOD-updates",
+  "kind": "module",
+  "title": "开发者选择留存的更新记录",
+  "status": "current",
+  "summary": "用户明确要求时留存一轮功能迭代，按日期阅读并跳到相关图卡片。",
+  "sources": [
+    {
+      "path": "maintain-project-map/references/update-records.md",
+      "role": "skill-source-authority",
+      "workspace_id": "source",
+      "reviewed_sha256": "f4360b98d246dba1642cfe5961d232496fcba6ce8f08a9fdd16318f7e7f1b91f",
+      "reviewed_dependencies": []
+    },
+    {
+      "path": "maintain-project-map/assets/reader.html",
+      "role": "skill-source-authority",
+      "workspace_id": "source",
+      "reviewed_sha256": "d8a8efae8efe5b4555fa8d896885a0bfde2b444f9f19f5456141e998bb1ed590",
+      "reviewed_dependencies": []
+    }
+  ],
+  "relations": [
+    {
+      "relation": "contained_by",
+      "to": {
+        "record_id": "MOD-reader"
+      }
+    },
+    {
+      "relation": "provides",
+      "to": {
+        "record_id": "IF-update-record"
+      }
+    },
+    {
+      "relation": "implements",
+      "to": {
+        "record_id": "REQ-passport-updates-history"
+      }
+    }
+  ],
+  "source_review": {
+    "reviewed_at": "2026-09-19T08:47:56.718776+00:00",
+    "reason": "核对新增公共静态导出和归档 Git 原字节保护；147 项完整回归与后续 16 项专项通过。其他来源仅统一 LF，Git 内容差异确认未改逻辑，保留原说明并更新跨系统可复用基线。",
+    "body_sha256": "f2aa22b825ff8f37170fd7538293083948e8d63a3769c4b17996abaf1121fdee"
+  }
+}
 ---
 
 # 开发者选择留存的更新记录

@@ -5,3 +5,4 @@ __pycache__/
 *.preview.json
 maintain-project-map/examples/**/views/
 docs/project/views/
+_site/

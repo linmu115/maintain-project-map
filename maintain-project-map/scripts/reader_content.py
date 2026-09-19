@@ -9,6 +9,7 @@ import re
 from urllib.parse import unquote, urlencode, urlsplit
 
 from reader_markdown import anchor_id, heading_anchors, heading_slug
+from document_archive import is_archived, stub_body
 
 
 FOLDER_TITLES = {
@@ -16,7 +17,7 @@ FOLDER_TITLES = {
     "integrations": "接入说明", "dependencies": "外部依赖", "adapters": "适配接口",
     "requirements": "需求", "requirement": "需求", "objects": "对象", "object": "对象",
     "implementation": "实际实现", "verification": "验证记录", "decisions": "设计决定",
-    "decision": "设计决定", "exploration": "探索", "notes": "说明", "updates": "更新记录",
+    "decision": "设计决定", "exploration": "探索", "notes": "说明", "updates": "更新记录", "source-analysis": "源码入口与依赖",
 }
 TEXT_SUFFIXES = {".md", ".markdown", ".txt", ".rst", ".ts", ".tsx", ".js", ".jsx",
                  ".mjs", ".cjs", ".py", ".json", ".yaml", ".yml", ".toml", ".css",
@@ -91,7 +92,13 @@ class LocalDocuments:
             for source in record.get("sources", []):
                 value = source.get("path") if isinstance(source, dict) else None
                 if value and not urlsplit(value).netloc:
-                    self.allowed.add((self.base / value).resolve())
+                    root = self.base
+                    if source.get("workspace_id"):
+                        choices = [w for w in data["project"].get("workspaces", []) if w.get("id") == source["workspace_id"]]
+                        if len(choices) != 1: continue
+                        root = (self.base / choices[0]["path"]).resolve()
+                        if not (root / value).resolve().is_relative_to(root): continue
+                    self.allowed.add((root / value).resolve())
         self.map_anchors = heading_anchors(data.get("map_body", ""))
 
     @staticmethod
@@ -141,6 +148,8 @@ class LocalDocuments:
             if record_id and target == context:
                 candidates = [r for r in candidates if r["id"] == record_id]
             owned = [r for r in candidates if r.get("owned")]
+            if len(candidates) == 1 and is_archived(candidates[0]):
+                return self.link(label, {"mode": "b", "record": candidates[0]["id"]}, "record", candidates[0]["id"])
             matches = [r for r in candidates if anchor and anchor in self.headings[r["id"]]]
             selected = owned[0] if len(owned) == 1 else matches[0] if len(matches) == 1 else None
             if selected:
@@ -164,7 +173,12 @@ class LocalDocuments:
                     digest = hashlib.sha256(raw).hexdigest()
                     if self.digests.get(target) and digest != self.digests[target]:
                         raise ValueError("来源在地图加载后发生变化，请重新加载并导出。")
-                    item.update(body=raw.decode("utf-8-sig"), source_sha256=digest,
+                    body = raw.decode("utf-8-sig")
+                    # A shared external document may contain an archived binding.
+                    # Never leak its old section through the raw-document view.
+                    if any(is_archived(r) for r in candidates):
+                        raise ValueError("此原始资料含已归档说明；请按记录 ID 打开当前说明，或显式查看归档原文。")
+                    item.update(body=body, source_sha256=digest,
                                 format="markdown" if target.suffix.lower() in {".md", ".markdown"} else "code")
                 except (OSError, UnicodeError, ValueError) as exc:
                     item["error"] = str(exc)

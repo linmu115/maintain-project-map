@@ -1,29 +1,75 @@
 ---
-id: MOD-archify
-kind: module
-title: 原生图接入与交互适配
-status: current
-summary: 调用固定版本 Archify 的校验、交付与图内交互；本 Skill 负责图源登记、记录绑定、嵌入样式和页面往返。
-aliases:
-- Archify 原生图与适配嵌入
-sources:
-- path: ../../maintain-project-map/scripts/archify_adapter.py
-  role: skill-source-authority
-- path: ../../maintain-project-map/references/archify-authoring.md
-  role: skill-source-authority
-- path: ../../maintain-project-map/assets/vendor/archify/ATTRIBUTION.md
-  role: skill-source-authority
-- path: ../../maintain-project-map/scripts/canvas_adapter.py
-  role: skill-source-authority
-- path: ../../maintain-project-map/assets/diagram-records.js
-  role: skill-source-authority
-relations:
-- relation: provides
-  to:
-    record_id: IF-native-diagram
-- relation: implements
-  to:
-    record_id: REQ-native-archify
+{
+  "id": "MOD-archify",
+  "kind": "module",
+  "title": "原生图接入与交互适配",
+  "status": "current",
+  "summary": "调用固定版本 Archify 的校验、交付与图内交互；本 Skill 负责图源登记、记录绑定、嵌入样式和页面往返。",
+  "aliases": [
+    "Archify 原生图与适配嵌入"
+  ],
+  "sources": [
+    {
+      "path": "maintain-project-map/scripts/archify_adapter.py",
+      "role": "skill-source-authority",
+      "workspace_id": "source",
+      "reviewed_sha256": "1cb5a7341603996feccfc850ddf29daa4c3bfed62f398af47e53a1f6a66a6964",
+      "reviewed_dependencies": [
+        {
+          "path": "maintain-project-map/scripts/canvas_adapter.py",
+          "sha256": "95ba849e4b7d90f8f072e347665470865e2331dfd1e2d3ad284ebcacfbd53280"
+        }
+      ]
+    },
+    {
+      "path": "maintain-project-map/references/archify-authoring.md",
+      "role": "skill-source-authority",
+      "workspace_id": "source",
+      "reviewed_sha256": "cea5832f1c7aba661ecf647f35edd6677b6a1e5025a45dd7cb3f0ac6497a917e",
+      "reviewed_dependencies": []
+    },
+    {
+      "path": "maintain-project-map/assets/vendor/archify/ATTRIBUTION.md",
+      "role": "skill-source-authority",
+      "workspace_id": "source",
+      "reviewed_sha256": "1219e095b581cacf336d91943de62fc1ad7d6438241cf4a3ce5eb25c94b02155",
+      "reviewed_dependencies": []
+    },
+    {
+      "path": "maintain-project-map/scripts/canvas_adapter.py",
+      "role": "skill-source-authority",
+      "workspace_id": "source",
+      "reviewed_sha256": "95ba849e4b7d90f8f072e347665470865e2331dfd1e2d3ad284ebcacfbd53280",
+      "reviewed_dependencies": []
+    },
+    {
+      "path": "maintain-project-map/assets/diagram-records.js",
+      "role": "skill-source-authority",
+      "workspace_id": "source",
+      "reviewed_sha256": "99c1dde3809c661661a545234d639ea80edc170ec576ad040d05d441d4438c73",
+      "reviewed_dependencies": []
+    }
+  ],
+  "relations": [
+    {
+      "relation": "provides",
+      "to": {
+        "record_id": "IF-native-diagram"
+      }
+    },
+    {
+      "relation": "implements",
+      "to": {
+        "record_id": "REQ-native-archify"
+      }
+    }
+  ],
+  "source_review": {
+    "reviewed_at": "2026-09-19T08:47:36.681089+00:00",
+    "reason": "核对新增公共静态导出和归档 Git 原字节保护；147 项完整回归与后续 16 项专项通过。其他来源仅统一 LF，Git 内容差异确认未改逻辑，保留原说明并更新跨系统可复用基线。",
+    "body_sha256": "1896ca6c256440d490b4ef27eb62152e1a8c59dd47ef01e93a1b918187d63e5b"
+  }
+}
 ---
 
 # 原生图接入与交互适配

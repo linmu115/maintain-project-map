@@ -1,14 +1,41 @@
 ---
-id: IF-http-preview
-kind: interface
-title: 阅读入口与预览状态
-status: current
-summary: 生成器交付 HTML 入口，预览服务返回可用地址或具体失败状态。
-sources:
-- path: ../../maintain-project-map/scripts/serve_map.py
-  role: skill-source-authority
-- path: ../../maintain-project-map/references/operations.md
-  role: skill-source-authority
+{
+  "id": "IF-http-preview",
+  "kind": "interface",
+  "title": "阅读入口与预览状态",
+  "status": "current",
+  "summary": "生成器交付 HTML 入口，预览服务返回可用地址或具体失败状态。",
+  "sources": [
+    {
+      "path": "maintain-project-map/scripts/serve_map.py",
+      "role": "skill-source-authority",
+      "workspace_id": "source",
+      "reviewed_sha256": "91382ef2456f566e09f80c4a92d5d1bed3e79416f43afb78cc82dc8a2a8ed96b",
+      "reviewed_dependencies": [
+        {
+          "path": "maintain-project-map/scripts/development_history.py",
+          "sha256": "556b088e8d4562f9440a5130f8b1731e70d4ccc5e75c1926be72b8ad7026f8ca"
+        },
+        {
+          "path": "maintain-project-map/scripts/system_map.py",
+          "sha256": "c591323f312d35a7428a1e92983f24d2aac23dba3f980cf6bf7838a4856be979"
+        }
+      ]
+    },
+    {
+      "path": "maintain-project-map/references/operations.md",
+      "role": "skill-source-authority",
+      "workspace_id": "source",
+      "reviewed_sha256": "d7c4d10f51271240631bfa6155d8841e9d6524a80cfdf04df54ef409b955f3a6",
+      "reviewed_dependencies": []
+    }
+  ],
+  "source_review": {
+    "reviewed_at": "2026-09-19T08:47:48.304674+00:00",
+    "reason": "核对新增公共静态导出和归档 Git 原字节保护；147 项完整回归与后续 16 项专项通过。其他来源仅统一 LF，Git 内容差异确认未改逻辑，保留原说明并更新跨系统可复用基线。",
+    "body_sha256": "edf35eb42bce6d3049063233e30614813ba28e73eb58ed7d1c2942612f79f303"
+  }
+}
 ---
 
 # 阅读入口与预览状态
@@ -23,3 +50,5 @@ sources:
 ## 系统项目进入
 
 系统地图的 __project 入口只接受当前清单明确收录的项目 ID，以及图、记录或节点身份。点击后检查目标当前状态，按需生成完整项目阅读页并在新标签页打开；不同系统可共用同一目标服务，生成过程按目标串行，原系统页保持。失效身份不猜选，失败页显示原因。
+
+已导出的独立归档页通过资源登记允许访问；只接受本次导出列出的归档 HTML，未列出文件和原始归档目录不会因此开放。重新导出时资源清单随之更新。

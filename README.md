@@ -2,6 +2,8 @@
 
 辅助长期开发的软件、工作流与 Skill 维护项目认识：需求、设计、对象、模块、接口、实现、验证和来源。一项目一地图，原始资料使用 Markdown/YAML 和 Git 保存。
 
+**[打开交互项目地图 ↗](https://linmu115.github.io/maintain-project-map/)** · [阅读地图 Markdown](docs/project/map.md) · [Skill 入口](maintain-project-map/SKILL.md)
+
 ## 演示视频
 
 用 Skill 自身的项目地图演示：展开左栏文档结构、阅读模块与接口、查看 Archify 架构泳道图，以及从图节点打开说明并返回。
@@ -26,7 +28,8 @@ Python 3.10+ 用于记录操作，安装 `maintain-project-map/requirements.txt`
 - 按需采用[组合项目与扩展接口](maintain-project-map/references/composite-projects.md)的组织指引：职责层级、提供方唯一合同、具体能力的接入依据，以及 Archify 模块边界和泳道。
 - 模块目录自动生成 B 可展开侧栏；Mistune 解析 Markdown，标准文档链接和 Wiki 链接连接记录、章节及已声明原资料。同义反向关系合并显示。
 - 记录合并、退役和失败探索分别表达；实现与验证独立存储。
-- 按名称、别名、正文检索；支持检索明确指定的 Codex 可见会话记录。
+- 按名称、别名、正文检索；可启用本地中文语义检索与 RRF 排名合并，按类型和模块缩小范围，返回可定位原文。支持单独检索明确指定的 Codex 可见会话记录。
+- [源码发现与说明归档](maintain-project-map/references/source-and-archive.md)：显式绑定 Git 工作树，按需提取入口、导入、定义及静态调用线索，发现未登记的联系；变化关联到说明并提示复核，确认失效后将正文归档、保留旧 ID 和替代入口。人读页面只增加简短的源码文档栏目。
 - 模块范围查询、有限接口目录和反向关系查询，支持只核对当前记录及来源的续读指纹；不要求模型读取全图。
 - 按需生成两种人读页面：项目概览、项目条目。白色为主的阅读界面、独立滚动、文档内按点击激活的画布。
 - 复用固定版本 Archify 的图模型、校验和阅读器，保留原版及嵌入副本。画布视窗固定，内部内容缩放和平移。
@@ -40,13 +43,23 @@ Python 3.10+ 用于记录操作，安装 `maintain-project-map/requirements.txt`
 
 本仓库同时维护 [自身地图](docs/project/map.md)、[地图清单](docs/project/project.yaml)和[设计方案](设计方案.md)。地图包含需求、模块、接口、实现与独立验证记录，以及可编辑的 Archify 图源；保留原项目和记录 ID。`research/` 中的早期检查是历史证据，不代表当前版本的测试结果或长期收益。
 
+直接访问 **[在线交互地图](https://linmu115.github.io/maintain-project-map/)**，无需安装或启动服务。文档目录、架构与流程图、记录互链和归档原文都可阅读。开发历程保留叙述，原始会话依据仅在维护者本机可用。页面由 [GitHub Actions](.github/workflows/project-map-pages.yml) 在主分支相关文件更新后自动构建并发布到 GitHub Pages。
+
 克隆仓库并安装上述依赖后，在仓库根目录生成并启动交互阅读页面：
 
 ```sh
 python maintain-project-map/scripts/render_map.py docs/project/project.yaml
 ```
 
-命令返回本机 HTTP 阅读地址。HTML、运行端口和预览回执可重新生成，不提交到仓库；普通地图阅读无需开发者原有目录或个人会话文件；开发历程的原文展开需对应的原始会话仍在本机，缺失时保留过程叙述并明确提示来源不可用。GitHub 上可直接阅读 Markdown，Wiki 条目链接和图节点交互由生成的阅读器提供。
+命令返回本机 HTTP 阅读地址。HTML、运行端口和预览回执可重新生成，不提交到仓库；普通地图阅读无需开发者原有目录或个人会话文件；开发历程的原文展开需对应的原始会话仍在本机，缺失时保留过程叙述并明确提示来源不可用。GitHub 文件页用于阅读 Markdown，在线交互由上面的 GitHub Pages 入口提供。
+
+为自己的公开仓库生成可托管站点，使用空输出目录，并明确限定可以发布的资料根目录：
+
+```sh
+python maintain-project-map/scripts/render_map.py docs/project/project.yaml --public-root . --output _site/index.html
+```
+
+将 `_site/` 作为静态站点发布。该模式不启动本机服务，不读取或打包本机会话证据；文件定位改为相对发布根的位置。根目录内的文档仍须是准备公开的内容。需要启用仓库的 Settings → Pages → GitHub Actions；其他仓库可复用工作流并修改 README 中的站点地址。
 
 ## 开发与检查
 
@@ -56,6 +69,8 @@ python -m pytest tests maintain-project-map/tests
 ```
 
 测试需要 pytest 和可用的 Node.js。项目接入说明见[本地操作](maintain-project-map/references/operations.md)。
+
+源码扫描的 JavaScript/TypeScript/HTML 解析另需 `maintain-project-map/requirements-source.txt` 中的可选依赖，相关测试也使用这些解析器。Python 源码解析无需额外包；解析器缺失会披露覆盖限制，不伪装为完整扫描。
 
 ## 第三方代码
 

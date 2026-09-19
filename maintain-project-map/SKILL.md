@@ -11,9 +11,11 @@ description: Locate local project maps by project name or alias, and maintain ma
 
 优先使用当前上下文中的项目绑定和已读材料。用户只提项目名称或别名时，先用 `scripts/map_catalog.py locate "项目名称"` 查询本机位置索引；唯一匹配后按问题读取地图，不要求用户重复提供路径。索引仅返回名称、ID、位置和可用状态，不加载全图或开发历程。缺少登记时，再在已知项目范围查找项目指引或 `docs/project/project.yaml`，不在每次调用时扫描全盘。存在同名项目或无法区分的工作树时保留候选，不随便选一份。定位与登记命令见 [本地操作](references/operations.md)。只在相关内容或版本发生变化时重新读取。
 
-需要创建、检索或检查地图时，使用本 Skill 的 `scripts/project_map.py`；调用方式见 [本地操作](references/operations.md)。它处理定位和机械整理，原始 Markdown/YAML 仍可直接编辑；工具不可用时沿用文件与 Git。
+需要创建、检索或检查地图时，使用本 Skill 的 `scripts/project_map.py`；调用方式见 [本地操作](references/operations.md)。搜索默认查当前状态，已配置本地模型时用词法与语义混合检索、RRF 合并；不可用会明确回退。按类型或模块收窄，用原文片段选择候选；语义相近不表示已核实，查旧状态时显式包含历史。默认读取为简短视图，完整元数据按需打开。原始 Markdown/YAML 仍可直接编辑；工具不可用时沿用文件与 Git。
 
-新接入或调整记录组织时，读 [资产模型](references/asset-model.md)。先绑定既有需求、架构和验证文档及其编号；建立最小入口，随实际工作补充。接入不要求先完成全量历史整理。
+新接入或调整记录组织时，读 [资产模型](references/asset-model.md)。先绑定既有需求、架构和验证文档及其编号；建立最小入口，随实际工作补充。源码工作区独立绑定；来源出现 needs_review 时核查相关说明，no_baseline 不代表仍然有效。接入不要求先完成全量历史整理。
+
+定位源码入口、检查依赖或修改绑定仓库时，按 [源码发现与说明归档](references/source-and-archive.md) 使用 `source` 入口，补查代码中存在但地图未登记的联系。查询默认只返回小批结果，范围及未解析项可见；静态线索不能替代源码核查。变化关联到记录后在 search/read 提示待复核；核对仍有效则 `review-record`，确认说明失效再 `archive-record`，不得仅凭文件变化归档。已归档记录默认只提供替代入口或当前说明缺口，显式历史读取才展开旧正文。
 
 接入组合项目，或整理模块层级、扩展接口及其图源时，读 [组合项目与扩展接口](references/composite-projects.md)。根据职责、独立接口和维护需要判断子模块及更深层级；接口合同只在提供方维护一份，双方接入说明相互链接。图应表达相关内部功能、归属和接口连接，不能用插件名称列表代替必要的结构分析。
 
@@ -44,6 +46,8 @@ description: Locate local project maps by project name or alias, and maintain ma
 ## 帮助开发者理解和提问
 
 用项目的目标、能力和对象组织解释，连接设计思路、交互规则、实际行为与可打开的记录位置；推测、建议与已有决定分开。需要阅读页面或架构/流程图时，读 [阅读与交互](references/reading-and-interaction.md)，使用 `scripts/render_map.py`。不同阅读方式共用一张项目地图，可视化服务阅读与理解，提问继续使用现有会话 harness。
+
+用户需要公开仓库中的在线地图时，按同一参考中的静态发布方式导出；用 Pages 站点链接作为阅读入口，保留本机证据与公开文档的边界。
 
 ## 控制维护成本
 

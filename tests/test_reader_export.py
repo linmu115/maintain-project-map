@@ -114,7 +114,7 @@ class ReaderSafetyTests(unittest.TestCase):
 
 
 class DiagramTests(unittest.TestCase):
-    def test_reader_search_recovers_historical_alias_without_hiding_failed_module(self):
+    def test_reader_search_requires_history_scope_without_hiding_failed_module(self):
         try:
             node = find_node()
         except RuntimeError:
@@ -122,10 +122,11 @@ class DiagramTests(unittest.TestCase):
         page = (SCRIPTS.parent / "assets/reader.html").read_text(encoding="utf-8")
         # Execute only the actual pure filtering function, with no DOM/browser.
         function = re.search(r"^function visible\(\).*", page, flags=re.M).group(0)
+        function = "\n".join(re.search(r"^function " + name + r"\(.*", page, flags=re.M).group(0) for name in ("archivedRecord", "historicalRecord")) + "\n" + function
         records = [{"id": "OLD", "title": "旧入口", "aliases": ["分享卡片"], "status": "withdrawn", "kind": "module"}, {"id": "BROKEN", "title": "仍存在的模块", "status": "failed", "kind": "module"}, {"id": "EXP", "title": "失败探索", "kind": "exploration", "status": "current", "outcome": "failed"}]
-        script = "const recordOrder=new Map();const records=" + json.dumps(records, ensure_ascii=False) + ";const historical=new Set(" + json.dumps(sorted(HISTORICAL)) + ");let state={history:false,verification:false,query:''};" + function + ";const current=visible().map(r=>r.id);state.query='分享卡片';const matched=visible().map(r=>r.id);process.stdout.write(JSON.stringify({current,matched}));"
+        script = "const recordOrder=new Map();const records=" + json.dumps(records, ensure_ascii=False) + ";const historical=new Set(" + json.dumps(sorted(HISTORICAL)) + ");let state={history:false,verification:false,query:''};" + function + ";const current=visible().map(r=>r.id);state.query='分享卡片';const matched=visible().map(r=>r.id);state.history=true;const historicalMatch=visible().map(r=>r.id);process.stdout.write(JSON.stringify({current,matched,historicalMatch}));"
         result = subprocess.run([node, "-e", script], capture_output=True, text=True, encoding="utf-8", timeout=10, check=True)
-        self.assertEqual(json.loads(result.stdout), {"current": ["BROKEN", "EXP"], "matched": ["OLD"]})
+        self.assertEqual(json.loads(result.stdout), {"current": ["BROKEN", "EXP"], "matched": [], "historicalMatch": ["OLD"]})
 
     def test_actual_reader_native_focus_and_embedding_behavior(self):
         node = find_node()

@@ -1,16 +1,38 @@
 ---
-id: IMP-map-catalog
-kind: implementation
-title: 本机项目地图目录与名称查找
-status: current
-summary: 在原位置注册表上增加名称、别名、分页检查和默认位置，主动登记现有项目地图。
-relations:
-- relation: implements
-  to:
-    record_id: IF-project-location
-sources:
-- path: ../../maintain-project-map/scripts/map_catalog.py
-  role: implementation
+{
+  "id": "IMP-map-catalog",
+  "kind": "implementation",
+  "title": "本机项目地图目录与名称查找",
+  "status": "current",
+  "summary": "在原位置注册表上增加名称、别名、分页检查和默认位置，主动登记现有项目地图。",
+  "relations": [
+    {
+      "relation": "implements",
+      "to": {
+        "record_id": "IF-project-location"
+      }
+    }
+  ],
+  "sources": [
+    {
+      "path": "maintain-project-map/scripts/map_catalog.py",
+      "role": "implementation",
+      "workspace_id": "source",
+      "reviewed_sha256": "626732649f0317a78d49974744029d722d3ab10eb6c41b818e5bb168dd9a404c",
+      "reviewed_dependencies": [
+        {
+          "path": "maintain-project-map/scripts/project_map.py",
+          "sha256": "67aee0a424ef3fe0019e0db34fbc97d9168e2edc6e35ee107faef86a63b49f6a"
+        }
+      ]
+    }
+  ],
+  "source_review": {
+    "reviewed_at": "2026-09-19T08:47:20.233334+00:00",
+    "reason": "核对新增公共静态导出和归档 Git 原字节保护；147 项完整回归与后续 16 项专项通过。其他来源仅统一 LF，Git 内容差异确认未改逻辑，保留原说明并更新跨系统可复用基线。",
+    "body_sha256": "16e39c87ffe0b9237281618551dedefc863a6d058b16a17cc0ea155b7b9de15c"
+  }
+}
 ---
 
 # 本机项目地图目录与名称查找

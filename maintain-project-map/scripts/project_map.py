@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """A small, live-file project-map reader and bounded command-line interface.
 
-No service, database, repository scan, Git writes, or implicit external traversal.
+No service, implicit repository scan, Git writes, or implicit external traversal.
+Optional local embeddings use a rebuildable vector cache, never cached source text.
 System queries summarize explicitly collected maps only when requested.
 The public load_project() result is the common input to human reading views.
 """
@@ -22,9 +23,12 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from typing import Any
 
+# Support callers loading this standalone script with importlib as well as CLI.
+if str(Path(__file__).resolve().parent) not in sys.path:
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 SCHEMA = "project-map/v1"
-HISTORICAL = {"retired", "merged", "superseded", "withdrawn"}
+HISTORICAL = {"retired", "merged", "superseded", "withdrawn", "archived"}
 
 
 class MapError(ValueError):
@@ -509,6 +513,8 @@ def load_project(manifest_path: str | Path) -> dict:
     map_path = _resolve_source(base, project["map"])
     map_body = read(map_path)
     sources = {}
+    from document_archive import is_archived, stub_body
+    archived_source_ids = {b.get("source_id") for b in project.get("bindings", []) if is_archived(b) and b.get("documentation", {}).get("archive_path")} - {b.get("source_id") for b in project.get("bindings", []) if not (is_archived(b) and b.get("documentation", {}).get("archive_path"))}
     for source in _list(project.get("sources", []), "sources"):
         if not isinstance(source, dict):
             raise MapError("sources entries must be objects")
@@ -519,7 +525,7 @@ def load_project(manifest_path: str | Path) -> dict:
         if fmt not in {"markdown", "markdown-table"}:
             raise MapError(f"Unsupported source format {fmt!r} for {source_id}")
         path = _resolve_source(base, source.get("path"))
-        sources[source_id] = (source, path, read(path))
+        sources[source_id] = (source, path, None if source_id in archived_source_ids else read(path))
 
     records = []
     if (base / "records").is_symlink():
@@ -542,6 +548,11 @@ def load_project(manifest_path: str | Path) -> dict:
             raise MapError(f"Binding {binding.get('id')!r}: unknown source_id {source_id!r}")
         source, path, text = sources[source_id]
         meta = copy.deepcopy(binding)
+        if is_archived(meta) and meta.get("documentation", {}).get("archive_path"):
+            body = stub_body(meta)
+            line = meta["documentation"].get("original_line", 1)
+            records.append(_record(meta, body, path, line, line, False, source_text=body))
+            continue
         if source.get("format", "markdown") == "markdown-table":
             if "heading" in binding:
                 raise MapError("A table binding uses row_id, not heading")
@@ -561,7 +572,7 @@ def load_project(manifest_path: str | Path) -> dict:
     relations = []
     project_id = project["project_id"]
     for record in records:
-        record["source_sha256"] = fingerprints[Path(record["path"])]
+        record["source_sha256"] = fingerprints.get(Path(record["path"]), hashlib.sha256(json.dumps(record, sort_keys=True).encode()).hexdigest())
         for item in record["relations"]:
             rel = copy.deepcopy(item)
             rel["from"] = {"project_id": project_id, "record_id": record["id"]}
@@ -780,36 +791,72 @@ def _brief(record: dict) -> dict:
     result = {k: record[k] for k in ("id", "kind", "title", "summary", "status", "progress", "gap", "aliases", "path", "line", "end_line")}
     if record["kind"] == "update":
         result["date"] = record["date"]
+    if record.get("documentation"):
+        result["documentation"] = record["documentation"]
     return result
 
 
-def search_project(doc: dict, query: str, limit: int = 8, current_only: bool = False, module: str | None = None) -> dict:
+def search_project(doc: dict, query: str, limit: int = 8, current_only: bool = True, module: str | None = None, *, kinds: list[str] | None = None, match: str = "auto", offset: int = 0, retrieval: str = "lexical") -> dict:
     q = query.casefold().strip()
     if not q:
         raise MapError("Search needs a nonempty query")
-    matches = []
+    if limit < 1 or offset < 0:
+        raise MapError("limit must be positive and offset nonnegative")
+    if retrieval not in {"auto", "lexical", "hybrid"}:
+        raise MapError("retrieval must be auto, lexical or hybrid")
+    if retrieval == "hybrid" and match != "auto":
+        raise MapError("Strict --match modes require lexical retrieval; use --match auto with hybrid.")
     from system_map import module_records
+    from record_search import rank_records
+    from document_archive import is_archived, with_history
+    if not current_only:
+        doc = with_history(doc)
     candidates, _ = module_records(doc, module)
-    for r in candidates:
-        if current_only and r["status"] in HISTORICAL:
-            continue
-        fields = {"id": r["id"], "title": r["title"], "aliases": "\n".join(r["aliases"]), "summary": str(r["summary"]), "body": r["body"]}
-        if r["kind"] == "update":
-            fields["date"] = r["date"]
-        reasons = [key for key, value in fields.items() if q in value.casefold()]
-        if reasons:
-            priority = 0 if q == r["id"].casefold() else 1 if "aliases" in reasons or "title" in reasons else 2
-            matches.append((priority, {**_brief(r), "matched_fields": reasons}))
-    matches.sort(key=lambda p: (p[0], p[1]["id"]))
+    candidates = [r for r in candidates if (not current_only or r["status"] not in HISTORICAL and not is_archived(r)) and (not kinds or r["kind"] in kinds)]
+    matches, mode, terms = rank_records(candidates, q, match)
+    retrieval_info = {"requested": retrieval, "mode": "lexical", "status": "ready"}
+    for _, info in matches:
+        info["retrieved_by"] = ["lexical"]
+    if retrieval == "auto" and match != "auto":
+        retrieval_info["status"] = "strict_lexical_match"
+    elif retrieval == "auto" and any(q == r["id"].casefold() for r in candidates):
+        retrieval_info["status"] = "exact_id"
+    elif retrieval != "lexical" and candidates:
+        from semantic_retrieval import SemanticError, semantic_search, fuse, WINDOW, RRF_K
+        try:
+            semantic, diagnostics = semantic_search(doc, candidates, query.strip())
+            lexical, mode, terms = rank_records(candidates, q, match, hybrid_candidates=True)
+            matches = fuse(lexical, semantic, q)
+            retrieval_info.update(mode="hybrid", candidate_window=WINDOW, rrf_k=RRF_K, diagnostics=diagnostics)
+        except (SemanticError, OSError, RuntimeError) as exc:
+            if retrieval == "hybrid":
+                raise MapError(f"Hybrid retrieval unavailable: {exc}") from exc
+            retrieval_info.update(status="degraded", reason=str(exc), reason_code=getattr(exc, "code", "local_unavailable"))
+    elif not candidates:
+        retrieval_info["status"] = "no_eligible_records"
+    end = offset + limit
+    from source_inventory import source_health
+    results = []
+    for record, info in matches[offset:end]:
+        result = {**_brief(record), **info}
+        health = source_health(doc, record)
+        if health: result["source_health"] = health
+        results.append(result)
     return {"project_id": doc["project"]["project_id"], "query": query, "scope": "current" if current_only else "current_and_historical", "module_id": module,
-            "results": [r for _, r in matches[:limit]], "total": len(matches), "truncated": len(matches) > limit,
-            "fingerprint": doc["fingerprint"], "coverage": "Candidates only; bodies and constraints have not been opened. Use read on relevant IDs, or refine the query when truncated."}
+            "kinds": kinds or [], "match_mode": mode, "query_terms": terms, "retrieval": retrieval_info,
+            "results": results, "total": len(matches), "truncated": len(matches) > end,
+            "next_offset": end if len(matches) > end else None,
+            "fingerprint": doc["fingerprint"], "coverage": ("Union of top 50 records per retrieval channel; total is candidate count, not all relevant records. Semantic proximity is not verified relevance. " if retrieval_info["mode"] == "hybrid" else "") + "Candidates and excerpts only; read selected IDs for their constraints.",
+            **({"next_step": "Try fewer keywords or aliases; inspect modules; use --include-history for old names. No match is not proof of absence."} if not matches else {})}
 
 
-def read_record(doc: dict, record_id: str, *, offset: int = 0, max_chars: int = 6000, max_lines: int = 120, expected_fingerprint: str | None = None, expected_record_fingerprint: str | None = None) -> dict:
+def read_record(doc: dict, record_id: str, *, offset: int = 0, max_chars: int = 6000, max_lines: int = 120, expected_fingerprint: str | None = None, expected_record_fingerprint: str | None = None, include_history: bool = False) -> dict:
     if expected_fingerprint is not None and expected_fingerprint != doc["fingerprint"]:
         raise MapError("Project sources changed after the previous read; locate the record again before continuing by offset")
     r = _find(doc, record_id)
+    from document_archive import is_archived, historical_record, stub_body
+    if is_archived(r):
+        r = historical_record(doc, r) if include_history else {**r, "body": stub_body(r), "source_text": stub_body(r)}
     from system_map import record_fingerprint
     record_digest = record_fingerprint(r)
     if expected_record_fingerprint is not None and expected_record_fingerprint != record_digest:
@@ -828,13 +875,16 @@ def read_record(doc: dict, record_id: str, *, offset: int = 0, max_chars: int = 
             "end": r["end_line"] if projected else first_line + max(0, len(text.splitlines()) - 1),
             "projected": projected}
     metadata = {k: v for k, v in r.items() if k not in {"body", "source_text"}}
+    from source_locations import resolve_sources
+    from source_inventory import source_health
+    health = source_health(doc, r)
     return {"project_id": doc["project"]["project_id"], "record": metadata, "body": text,
             "receipt": "opened_partial" if truncated or offset else "opened_full", "offset_unit": "unicode_code_points",
             "offset": offset, "end_offset": end, "total_chars": len(body), "source_lines": span,
             "truncated": truncated, "record_fingerprint": record_digest,
             "coverage": "Partial body; unread constraints may remain. Continue reading before claiming full coverage." if truncated or offset else "Complete body of this record only; related records and source code are not implied to have been read.",
-            "continuation": {"record_id": record_id, "offset": end, "fingerprint": doc["fingerprint"], "record_fingerprint": record_digest} if truncated else None,
-            "fingerprint": doc["fingerprint"], "version": doc["version"]}
+            "continuation": {"record_id": record_id, "offset": end, "fingerprint": doc["fingerprint"], "record_fingerprint": record_digest, "include_history": include_history} if truncated else None,
+            "fingerprint": doc["fingerprint"], "version": doc["version"], **resolve_sources(doc, r), **({"source_health": health} if health else {})}
 
 
 def related_records(doc: dict, record_id: str, *, limit: int = 30) -> dict:
@@ -915,15 +965,42 @@ def cli(argv: list[str] | None = None) -> int:
             p.add_argument("--query", default="", help="Substring in interface name, ID or summary")
         if cmd == "impact":
             p.add_argument("record_id", nargs="?", help="Omit to query relations for the project")
+    for cmd in ("source", "bind-workspace", "review-record", "archive-record"):
+        p = sub.add_parser(cmd)
+        p.add_argument("path")
+        if cmd == "source":
+            p.add_argument("--workspace")
+            p.add_argument("--kind", choices=("summary", "entrypoint", "dependency", "call", "symbol", "gap", "review", "coverage"), default="summary")
+            p.add_argument("--query", default="")
+            p.add_argument("--limit", type=_positive, default=12)
+            p.add_argument("--offset", type=int, default=0)
+        elif cmd == "bind-workspace":
+            p.add_argument("workspace_id"); p.add_argument("root")
+            p.add_argument("--python-root", action="append")
+            p.add_argument("--exclude", action="append")
+        else:
+            p.add_argument("record_id"); p.add_argument("--reason", required=True)
+            if cmd == "archive-record":
+                p.add_argument("--evidence", required=True); p.add_argument("--successor")
     for cmd in ("search", "read", "related", "validate", "retire", "merge", "export"):
         p = sub.add_parser(cmd)
         p.add_argument("path", help="Project directory or project.yaml")
+        if cmd in {"search", "read"}:
+            p.add_argument("--detail", choices=("compact", "full"), default="compact", help="Compact model output by default; full retains all metadata")
         if cmd == "search":
-            p.add_argument("query"); p.add_argument("--limit", type=_positive, default=8); p.add_argument("--current-only", action="store_true")
+            p.add_argument("query"); p.add_argument("--limit", type=_positive, default=8)
+            scope = p.add_mutually_exclusive_group()
+            scope.add_argument("--current-only", dest="current_only", action="store_true", default=True, help="Default: exclude retired/superseded/archived records")
+            scope.add_argument("--include-history", dest="current_only", action="store_false", help="Also search historical statuses")
             p.add_argument("--module", help="Stable module record ID; locate with modules")
+            p.add_argument("--kind", action="append", help="Record type; repeat for multiple types")
+            p.add_argument("--match", choices=("auto", "all", "any", "phrase"), default="auto", help="Lexical matching; strict modes select lexical retrieval")
+            p.add_argument("--retrieval", choices=("auto", "lexical", "hybrid"), default="auto", help="auto: local hybrid if configured, explicit lexical fallback otherwise; hybrid fails if unavailable")
+            p.add_argument("--offset", type=int, default=0)
         if cmd in {"read", "related", "retire", "merge"}:
             p.add_argument("record_id")
         if cmd == "read":
+            p.add_argument("--include-history", action="store_true", help="Explicitly open preserved archived content")
             p.add_argument("--offset", type=int, default=0); p.add_argument("--max-chars", type=_positive, default=6000); p.add_argument("--max-lines", type=_positive, default=120)
             p.add_argument("--fingerprint", help="Require the previous read's fingerprint when continuing by offset")
             p.add_argument("--record-fingerprint", help="Check only this record/source; unrelated map edits may continue")
@@ -948,12 +1025,20 @@ def cli(argv: list[str] | None = None) -> int:
             code = 0 if result["status"] == "resolved" else 2
         elif args.command in {"retire", "merge"}:
             result = set_lifecycle(args.path, args.record_id, "retired" if args.command == "retire" else "merged", args.reason, args.successor)
+        elif args.command == "archive-record":
+            from document_archive import archive_record
+            result = archive_record(args.path, args.record_id, args.reason, args.evidence, args.successor)
+        elif args.command in {"source", "bind-workspace", "review-record"}:
+            from source_inventory import source_query, bind_workspace, review_record_sources
+            if args.command == "source": result = source_query(args.path, args.workspace, args.kind, args.query, args.limit, args.offset)
+            elif args.command == "bind-workspace": result = bind_workspace(args.path, args.workspace_id, args.root, args.python_root, args.exclude)
+            else: result = review_record_sources(args.path, args.record_id, args.reason)
         else:
             doc = load_project(args.path)
             if args.command == "search":
-                result = search_project(doc, args.query, args.limit, args.current_only, args.module)
+                result = search_project(doc, args.query, args.limit, args.current_only, args.module, kinds=args.kind, match=args.match, offset=args.offset, retrieval=args.retrieval)
             elif args.command == "read":
-                result = read_record(doc, args.record_id, offset=args.offset, max_chars=args.max_chars, max_lines=args.max_lines, expected_fingerprint=args.fingerprint, expected_record_fingerprint=args.record_fingerprint)
+                result = read_record(doc, args.record_id, offset=args.offset, max_chars=args.max_chars, max_lines=args.max_lines, expected_fingerprint=args.fingerprint, expected_record_fingerprint=args.record_fingerprint, include_history=args.include_history)
             elif args.command in {"members", "interfaces", "impact", "modules"}:
                 from system_map import query_system, module_records, page
                 if args.command == "modules":
@@ -974,6 +1059,9 @@ def cli(argv: list[str] | None = None) -> int:
                     raise MapError("Export needs a .json target separate from project source files")
                 _atomic_write(output, json.dumps(doc, ensure_ascii=False, indent=2) + "\n")
                 result = {"output": str(output), "record_count": len(doc["records"]), "fingerprint": doc["fingerprint"], "valid": doc["validation"]["valid"]}
+        if getattr(args, "detail", None) == "compact":
+            from record_search import compact_response
+            result = compact_response(args.command, result)
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return code
     except (ValueError, OSError) as exc:

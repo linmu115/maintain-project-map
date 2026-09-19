@@ -7,10 +7,10 @@ const historyViewMemory=new Map();let historyViewRestore=null;
 const historyViewFields=['historyView','historyEntry','experience','task','event','query','anchor','historyCategory','historyResult','historyModule'];
 function historyMatches(r){const terms=state.query.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);return terms.every(q=>[r.title,r.summary,r.body,r.date,r.applicability,r.outcome,...(r.aliases||[]),...(r.modules||[]),...(r.related_records||[])].join(' ').toLocaleLowerCase().includes(q));}
 function historyRows(){
- return records.filter(r=>r.kind==='history'&&historyMatches(r))
+ return records.filter(r=>r.kind==='history'&&!archivedRecord(r)&&historyMatches(r))
   .sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||b.id.localeCompare(a.id));
 }
-function historyCases(filtered=true){return records.filter(r=>r.kind==='experience'&&(!filtered||(historyMatches(r)&&(!state.historyCategory||(r.categories||[]).includes(state.historyCategory))&&(!state.historyResult||(r.results||[]).includes(state.historyResult))&&(!state.historyModule||(r.modules||[]).includes(state.historyModule))))).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||a.title.localeCompare(b.title,'zh-CN'));}
+function historyCases(filtered=true){return records.filter(r=>r.kind==='experience'&&!archivedRecord(r)&&(!filtered||(historyMatches(r)&&(!state.historyCategory||(r.categories||[]).includes(state.historyCategory))&&(!state.historyResult||(r.results||[]).includes(state.historyResult))&&(!state.historyModule||(r.modules||[]).includes(state.historyModule))))).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||a.title.localeCompare(b.title,'zh-CN'));}
 function historyEntryFor(r,view,group=''){
  if(view==='tasks')return 'tasks/'+(r.task_id||r.id)+'/'+r.id;
  const category=(r.categories||[]).includes(group)?group:(r.categories||[])[0];
@@ -122,6 +122,7 @@ function evidenceBox(task,id,label){
  return details;
 }
 function historyCoverage(r,descriptor){
+ if(descriptor.available===false)return el('p','meta',descriptor.reason);
  const c=descriptor.coverage,box=el('details','history-coverage');
  add(box,el('summary','','整理范围与来源'),el('p','',r.coverage_note||'按所选任务范围整理；叙述不是完整事件转录。'),el('p','',r.applicability||'适用版本未记录，请核查当前代码与条件。'),el('p','meta',historyDate(c.start_time)+' 至 '+historyDate(c.end_time)+' · '+c.event_count+' 个来源定位'),el('p','meta','原始消息和工具输出保留在 Codex 会话中，本地图只保存定位。点开依据时按段读取；原会话删除或内容改变时会提示不可用。'),el('p','locator',c.source_path+' : '+c.start_line+'–'+c.end_line));
  if(c.unpaired_calls.length)box.append(el('p','meta',c.unpaired_calls.length+' 组调用在所选范围内不完整。'));
@@ -180,7 +181,7 @@ function viewDevelopmentHistory(){
    const children=allCases.filter(c=>c.task_id===r.id);if(children.length){const section=el('section','history-related');section.append(el('h2','','这次任务留下的经验'));for(const c of children)section.append(historyCaseCard(c,'tasks',r.id));m.append(section);}
   }
   const related=el('section','history-related');related.append(el('h2','','查看当前成果'));for(const id of r.related_records||[])if(byId.has(id))related.append(button(byId.get(id).title,()=>navigate(id),'link'));if(related.children.length>1)m.append(related);
-  if(r.kind==='history'&&historyDescriptor(r.id))m.append(allHistoryEvents(r.id));
+  if(r.kind==='history'&&historyDescriptor(r.id)&&historyDescriptor(r.id).available!==false)m.append(allHistoryEvents(r.id));
  }
  return add(el('div','shell'),s,m);
 }

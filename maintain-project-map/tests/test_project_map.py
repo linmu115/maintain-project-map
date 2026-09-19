@@ -8,6 +8,7 @@ import subprocess
 import sys
 
 MODULE = Path(__file__).resolve().parents[1] / "scripts/project_map.py"
+sys.path.insert(0, str(MODULE.parent))
 SPEC = importlib.util.spec_from_file_location("project_map", MODULE)
 pm = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(pm)
@@ -89,9 +90,98 @@ class MapTests(unittest.TestCase):
         self.assertEqual(old["body"], original)
         self.assertEqual(old["record"]["status"], "retired")
         self.assertEqual(old["record"]["custom"], {"keep": True})
-        self.assertEqual(pm.search_project(doc, "自动发布")["results"][0]["id"], "old")
+        self.assertEqual(pm.search_project(doc, "自动发布", current_only=False)["results"][0]["id"], "old")
         self.assertEqual(pm.search_project(doc, "自动发布", current_only=True)["total"], 0)
         self.assertEqual(old["record"]["lifecycle"]["successor"], {"record_id": "new"})
+
+    def test_multi_keyword_filters_ranking_and_literal_snippets(self):
+        self.record("Z-api", "# 说明\n返回提交接口的错误；失败时保留任务。\n", kind="interface", title="任务提交", aliases=["submitJob"])
+        self.record("A-background", "过去分析提交接口的错误。", kind="exploration", title="一次调试")
+        self.record("B-old", "提交接口的错误", kind="interface", status="archived")
+        doc = pm.load_project(self.base)
+        result = pm.search_project(doc, "接口 错误")
+        self.assertEqual(result["results"][0]["id"], "Z-api")
+        self.assertEqual(result["total"], 2)
+        hit = result["results"][0]["snippet"]
+        self.assertEqual(hit["text"], "返回提交接口的错误；失败时保留任务。")
+        self.assertEqual(hit["line"], doc["records"][-1]["line"] + 1)
+        self.assertEqual(pm.search_project(doc, "接口 错误", kinds=["interface"])["total"], 1)
+        self.assertEqual(pm.search_project(doc, "SUBMITJOB")["results"][0]["match"], "exact")
+        self.assertEqual(pm.search_project(doc, "B-old")["total"], 0)
+        self.assertEqual(pm.search_project(doc, "B-old", current_only=False)["results"][0]["id"], "B-old")
+
+    def test_disclosed_cjk_fallback_and_no_silent_filter_expansion(self):
+        self.record("IF-query", "按项目 ID 查询记录，分段读取正文。", kind="interface", title="查询与分段读取")
+        self.record("MOD-preview", "生成页面并启动本机服务。", title="阅读预览")
+        doc = pm.load_project(self.base)
+        result = pm.search_project(doc, "怎么查询项目记录")
+        self.assertEqual(result["match_mode"], "cjk_bigrams")
+        self.assertEqual(result["results"][0]["id"], "IF-query")
+        self.assertEqual(result["results"][0]["match"], "partial_terms")
+        self.assertEqual(pm.search_project(doc, "怎么查询项目记录", match="phrase")["total"], 0)
+        self.assertEqual(pm.search_project(doc, "查询", kinds=["verification"])["total"], 0)
+        self.assertEqual(pm.search_project(doc, "完全无关的天文观测问题")["total"], 0)
+
+    def test_search_pages_and_cross_field_words(self):
+        for n in range(5):
+            self.record(f"R-{n}", "读取参数说明", kind="interface", title=f"接口 {n}")
+        doc = pm.load_project(self.base)
+        first = pm.search_project(doc, "接口 参数", limit=2)
+        second = pm.search_project(doc, "接口 参数", limit=2, offset=first["next_offset"])
+        self.assertEqual(first["total"], 5)
+        self.assertTrue(set(r["id"] for r in first["results"]).isdisjoint(r["id"] for r in second["results"]))
+        self.assertEqual(pm.search_project(doc, "接口 missing", match="all")["total"], 0)
+        self.assertEqual(pm.search_project(doc, "接口 missing")["match_mode"], "any_terms")
+
+    def test_sources_bind_workspace_and_mark_changes_for_review(self):
+        import hashlib
+        repo = self.root / "source-checkout"
+        repo.mkdir()
+        source = repo / "entry.py"
+        source.write_text("def main(): pass\n", encoding="utf-8")
+        baseline = hashlib.sha256(source.read_bytes()).hexdigest()
+        self.manifest(workspaces=[{"id": "source", "path": "../source-checkout"}])
+        self.record("M", sources=[{"role": "implementation", "workspace_id": "source", "path": "entry.py", "symbol": "main", "reviewed_sha256": baseline}])
+        result = pm.read_record(pm.load_project(self.base), "M")["resolved_sources"][0]
+        self.assertEqual(result["resolved_path"], str(source.resolve()))
+        self.assertEqual(result["workspace_root"], str(repo.resolve()))
+        self.assertEqual(result["review"], "unchanged_since_review")
+        self.assertEqual(result["symbol_check"], "found")
+        source.write_text("def main(): return 1\n", encoding="utf-8")
+        changed = pm.read_record(pm.load_project(self.base), "M")
+        self.assertEqual(changed["resolved_sources"][0]["review"], "needs_review")
+        self.assertEqual(changed["record"]["status"], "current")
+
+    def test_sources_do_not_guess_workspace_or_claim_unchecked_freshness(self):
+        self.record("M", sources=[{"path": "map.md"}, {"workspace_id": "missing", "path": "map.md"},
+                                  {"workspace_id": "known", "path": "../map/map.md"}])
+        self.manifest(workspaces=[{"id": "known", "path": "../source-checkout"}])
+        sources = pm.read_record(pm.load_project(self.base), "M")["resolved_sources"]
+        self.assertEqual(sources[0]["availability"], "exists")
+        self.assertEqual(sources[0]["workspace_binding"], "undeclared")
+        self.assertEqual(sources[0]["review"], "no_baseline")
+        self.assertEqual(sources[1]["availability"], "unresolved_workspace")
+        self.assertEqual(sources[2]["availability"], "outside_workspace")
+
+    def test_compact_read_keeps_continuation_and_full_metadata_is_opt_in(self):
+        self.record("R", "甲乙丙丁戊己\n", custom={"long": "detail"}, gap="尚未验证错误恢复")
+        cmd = [sys.executable, "-X", "utf8", str(MODULE), "read", str(self.base), "R", "--max-chars", "3"]
+        run = lambda argv: json.loads(subprocess.run(argv, capture_output=True, text=True, encoding="utf-8", check=True, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0)).stdout)
+        compact = run(cmd)
+        self.assertNotIn("custom", compact["record"])
+        self.assertEqual(compact["record"]["gap"], "尚未验证错误恢复")
+        self.assertIn("custom", run(cmd + ["--detail", "full"])["record"])
+        token = compact["continuation"]
+        next_part = run(cmd + ["--offset", str(token["offset"]), "--record-fingerprint", token["record_fingerprint"]])
+        self.assertEqual(compact["body"] + next_part["body"], "甲乙丙丁戊己")
+
+    def test_compact_read_preserves_outcome_and_applicability(self):
+        from record_search import compact_response
+        self.record("E", kind="exploration", outcome="failed", applicability="仅旧版本", coverage_note="未检查新版")
+        compact = compact_response("read", pm.read_record(pm.load_project(self.base), "E"))
+        self.assertEqual(compact["record"]["outcome"], "failed")
+        self.assertEqual(compact["record"]["applicability"], "仅旧版本")
+        self.assertEqual(compact["record"]["coverage_note"], "未检查新版")
 
     def test_failed_exploration_is_not_retired_functionality(self):
         self.record("EXP-1", kind="exploration", outcome="failed", status="current")

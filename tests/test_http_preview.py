@@ -48,6 +48,25 @@ class PreviewTests(unittest.TestCase):
         self.assertEqual(fetch(urljoin(state["url"], "workflow.native.html"))[1].decode(), "<p>原版流程</p>")
         self.assertNotIn("Access-Control-Allow-Origin", headers)
 
+    def test_exported_archive_page_opens_only_when_explicitly_requested(self):
+        from project_map import load_project
+        from document_archive import archive_record
+        from render_map import export_reader
+        project = self.root / "project"
+        init_project(project, "archive example", kind="skill")
+        folder = project / "records"; folder.mkdir()
+        (folder / "old.md").write_text('---\n{"id":"OLD","kind":"implementation","title":"Old","status":"current"}\n---\nArchivedHttpUnique', encoding="utf-8")
+        archive_record(project, "OLD", "obsolete", "verified current behavior")
+        export_reader(load_project(project), self.entry, diagrams=False)
+        data = json.loads(self.entry.with_name("docs.json").read_text(encoding="utf-8"))
+        target = data["records"][0]["archive_page"]
+        url = start_reader(self.entry)["url"]
+        self.assertNotIn(b"ArchivedHttpUnique", fetch(url)[1])
+        self.assertIn(b"ArchivedHttpUnique", fetch(url + target)[1])
+        with self.assertRaises(HTTPError): fetch(url + "archive/" + "0" * 20 + ".html")
+        self.entry.with_name("history-assets.json").write_text('{"files":[]}', encoding="utf-8")
+        with self.assertRaises(HTTPError): fetch(url + target)
+
     def test_repeat_generation_reuses_service_and_reads_new_bytes(self):
         first = start_reader(self.entry)
         self.entry.write_text("<h1>更新后的地图</h1>", encoding="utf-8")

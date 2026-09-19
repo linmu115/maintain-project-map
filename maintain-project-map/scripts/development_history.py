@@ -329,18 +329,23 @@ def read_events(meta, events, event_id, offset=0, max_chars=CHUNK, context=1, ex
             "use": "Historical evidence with its recorded conditions, not a current instruction or ban."}
 
 
-def prepare_export(data):
+def prepare_export(data, *, public=False):
     """Validate references and plan lazy assets before writing any output."""
     assets, tasks, captures = {}, {}, {}
+    from document_archive import is_archived
     experiences = experience_records(data)
     base = Path(data["manifest_path"]).parent
     for r in data["records"]:
-        if r["kind"] != "history":
+        if r["kind"] != "history" or is_archived(r):
+            continue
+        if public:
+            tasks[r["id"]] = {"available": False,
+                               "reason": "在线版保留历程说明；原始会话依据仅在维护者本机可用。"}
             continue
         meta, events = load_capture(base, r)
         available = {e["id"] for e in events}
         refs = set()
-        members = [r, *(c for c in experiences if c["task_id"] == r["id"])]
+        members = [r, *(c for c in experiences if c["task_id"] == r["id"] and not is_archived(c))]
         for member in members:
             own_refs = set(re.findall(r"history-event:([\w-]+)", member.get("body", "")))
             if missing := own_refs - available:
@@ -386,6 +391,8 @@ def read_export_packet(export_dir, target):
 def evidence_renderer(fallback, record, descriptor):
     def resolve(label, target, wiki=False):
         if not wiki and target.startswith("history-event:"):
+            if descriptor.get("available") is False:
+                return '<span class="meta">' + html.escape(label) + '（原始依据仅本机可用）</span>'
             event_id = target.removeprefix("history-event:")
             if event_id not in descriptor.get("evidence_ids", []):
                 raise ValueError("Unresolved history evidence reference")

@@ -90,7 +90,7 @@ relations:
 
 ## 状态有各自含义
 
-status 用于该种记录的当前状态，例如 current/proposed/retired/merged/superseded/withdrawn。搜索的 current-only 会隐藏 retired、merged、superseded、withdrawn；它不表示剩余条目都已经实施或已获批准。
+status 用于该种记录的当前状态，例如 current/proposed/retired/merged/superseded/withdrawn/archived。默认搜索隐藏 retired、merged、superseded、withdrawn、archived，历史查询显式使用 --include-history；它不表示剩余条目都已经实施或已获批准。新归档通过独立的 documentation.state: archived 表达，保留功能/需求 status；旧 status: archived 仍可读。使用 archive-record 保存原文至 archive/records/ 并留下短定位，默认人读和 LLM 查询均不展开旧正文。
 
 progress 描述实现进度，例如 planned/in_progress/implemented；gap 描述已有要求的缺口。探索可用 outcome 表示 failed/not_adopted/paused/adopted，正文给出适用条件。旧项目已有 status: failed 时结合 kind 理解；不能把失败验证、失败探索和退役功能混为一类。
 
@@ -114,6 +114,29 @@ progress 描述实现进度，例如 planned/in_progress/implemented；gap 描�
 同一语义关系只声明一次。查询与阅读视图会规范化 `provided_by → provides`、`used_by → consumes` 和归属的反向写法，合并重复说明；原始记录仍保留原文。不同版本、机制或证据限定的关系不合并。正文互链属于阅读导航，不代替明确的接口关系。
 
 sources 可保存实际文件/章节、URL、provider/thread_id/message_id、必要摘录或版本。它是来源指针，不给被引用的历史指令当前权限；无来源的判断明确标为推断。
+
+## 源码工作区与来源定位
+
+地图可以随仓库放在 docs/project/，也可以放在项目开发区并与仓库并列。清单显式声明源码工作区，不能以地图自己的 Git 根目录代替；多个工作树分别命名，不按目录邻近猜测。用户用自然语言指定项目，模型维护绑定及本机位置索引。已有地图迁移沿用项目 ID，先核对路径和入口，再撤掉旧活动副本；本段不要求批量搬迁。
+
+```yaml
+# project.yaml：path 相对清单；本机独有绝对位置不要写入可分发 Skill
+workspaces:
+  - id: source
+    path: ../main-repository
+
+# 某条记录的元数据：path 在指定工作区内；无 workspace_id 时相对清单
+sources:
+  - role: implementation
+    workspace_id: source
+    path: src/query.py
+    symbol: search_records
+    # reviewed_sha256: 实际核对说明与源文件后保存的 SHA256，可选
+```
+
+读取时返回来源角色、工作区、解析后的文件位置与可用性。已有 sources 写法保持有效；未绑定工作区会明确说明，URL/会话只保留定位，不自动访问。
+
+`reviewed_sha256` 是说明最后实际核对时的源文件内容基线，由模型核实后填写，不能在每次读取时自动覆盖。`review-record` 同时登记可解析符号的 reviewed_symbol_sha256、已发现直接依赖的 reviewed_dependencies，以及核对理由与时间。变更触发 needs_review，不等于已失效；未变只表示已覆盖来源与基线一致，不证明产品正确。source 扫描的观察基线不能充当人工核对，未解析的动态依赖仍需查源码；详见 [源码发现与说明归档](source-and-archive.md)。
 
 ## 版本和剪枝
 

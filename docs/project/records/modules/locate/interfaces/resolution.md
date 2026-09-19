@@ -1,18 +1,45 @@
 ---
-id: IF-project-location
-kind: interface
-title: 项目名称、ID 与位置解析
-status: current
-summary: 支持项目名称与别名查询，区分同名项目、工作树、默认位置和失效路径；解析不加载正文。
-sources:
-- path: ../../maintain-project-map/references/operations.md
-  role: skill-source-authority
-- path: ../../maintain-project-map/scripts/map_catalog.py
-  role: skill-source-authority
-relations:
-- relation: related
-  to:
-    record_id: OBJ-map-identity
+{
+  "id": "IF-project-location",
+  "kind": "interface",
+  "title": "项目名称、ID 与位置解析",
+  "status": "current",
+  "summary": "支持项目名称与别名查询，区分同名项目、工作树、默认位置和失效路径；解析不加载正文。",
+  "sources": [
+    {
+      "path": "maintain-project-map/references/operations.md",
+      "role": "skill-source-authority",
+      "workspace_id": "source",
+      "reviewed_sha256": "d7c4d10f51271240631bfa6155d8841e9d6524a80cfdf04df54ef409b955f3a6",
+      "reviewed_dependencies": []
+    },
+    {
+      "path": "maintain-project-map/scripts/map_catalog.py",
+      "role": "skill-source-authority",
+      "workspace_id": "source",
+      "reviewed_sha256": "626732649f0317a78d49974744029d722d3ab10eb6c41b818e5bb168dd9a404c",
+      "reviewed_dependencies": [
+        {
+          "path": "maintain-project-map/scripts/project_map.py",
+          "sha256": "67aee0a424ef3fe0019e0db34fbc97d9168e2edc6e35ee107faef86a63b49f6a"
+        }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "relation": "related",
+      "to": {
+        "record_id": "OBJ-map-identity"
+      }
+    }
+  ],
+  "source_review": {
+    "reviewed_at": "2026-09-19T08:47:28.513888+00:00",
+    "reason": "核对新增公共静态导出和归档 Git 原字节保护；147 项完整回归与后续 16 项专项通过。其他来源仅统一 LF，Git 内容差异确认未改逻辑，保留原说明并更新跨系统可复用基线。",
+    "body_sha256": "c4a9a5f127616a0d968bbf4816f520a2237ad1a06b10857fa4396c36b885ba97"
+  }
+}
 ---
 
 # 项目名称、ID 与位置解析
