@@ -21,16 +21,16 @@ def check_public_scope(data: dict, output: Path, root: Path) -> None:
             raise ValueError("Public source is outside the declared root: " + str(path))
 
 
-def portable(value, root: Path, output: Path):
+def portable(value, root: Path, output: Path, *, field=""):
     """Keep repository-relative locators; remove machine-only metadata paths.
 
     This is not a secret scanner. Authored documents within the public root must
     already be suitable for publication. It only normalizes generated metadata.
     """
     if isinstance(value, dict):
-        return {key: portable(item, root, output) for key, item in value.items()}
+        return {key: portable(item, root, output, field=key) for key, item in value.items()}
     if isinstance(value, list):
-        return [portable(item, root, output) for item in value]
+        return [portable(item, root, output, field=field) for item in value]
     if not isinstance(value, str):
         return value
     # Long bodies can contain a generated source locator, so handle both native
@@ -40,7 +40,7 @@ def portable(value, root: Path, output: Path):
             value = value.replace(spelling + "\\", prefix + "/").replace(spelling + "/", prefix + "/")
             if value == spelling:
                 value = prefix
-    if Path(value).is_absolute() or PureWindowsPath(value).is_absolute():
+    if field in {"path", "source_path", "manifest_path", "map_path", "git_root", "repo_root", "original_path", "output", "file"} and (Path(value).is_absolute() or PureWindowsPath(value).is_absolute()):
         return "本机位置（未公开）"
     return value
 

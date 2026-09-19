@@ -16,7 +16,7 @@ LLM 阅读入口：`project_map.py source <地图> --kind entrypoint|dependency|
 
 ## 工作区 source
 
-分支 `codex/llm-map-retrieval`，提交 `17d5db0627dcb08ddfb7034b654851eeff5eb22a`；扫描 28 个文件。内容指纹 `f939b5cbf667a781`。
+分支 `codex/llm-map-retrieval`，提交 `cd841c8ceba3f91f52b1ffae1046add471bff6dd`；扫描 28 个文件。内容指纹 `13e7af29694883d7`。
 
 ### 入口
 

@@ -39,7 +39,7 @@
         },
         {
           "path": "maintain-project-map/scripts/public_export.py",
-          "sha256": "a688ba62ab937a48a5dd16b6964e79ba298260fcd9be87af977128ee460fb5ef"
+          "sha256": "645e9e44bca230bc78f707cd6de054904af4c7672d73329bcbea4b9d9029a1b7"
         },
         {
           "path": "maintain-project-map/scripts/reader_content.py",
@@ -67,7 +67,7 @@
       "workspace_id": "source",
       "path": "maintain-project-map/scripts/public_export.py",
       "role": "implementation",
-      "reviewed_sha256": "a688ba62ab937a48a5dd16b6964e79ba298260fcd9be87af977128ee460fb5ef",
+      "reviewed_sha256": "645e9e44bca230bc78f707cd6de054904af4c7672d73329bcbea4b9d9029a1b7",
       "reviewed_dependencies": [
         {
           "path": "maintain-project-map/scripts/reader_content.py",
@@ -84,8 +84,8 @@
     }
   ],
   "source_review": {
-    "reviewed_at": "2026-09-19T08:50:25.323859+00:00",
-    "reason": "复核原字节归档规则允许 CRLF 保留；真实 Git 往返验证通过，公共导出和本机读取行为不变。",
+    "reviewed_at": "2026-09-19T09:01:07.224678+00:00",
+    "reason": "复核公共导出只清理路径元数据，保留斜杠开头的正文和源码注释；4 项公共导出检查通过。",
     "body_sha256": "9bb23d5f5e6101e36980a680d1addc32568412282012c0f579d7db98d2a44d1d"
   }
 }

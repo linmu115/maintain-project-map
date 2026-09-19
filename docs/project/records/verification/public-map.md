@@ -21,3 +21,5 @@ relations:
 远程发布结果在 [GitHub Actions](https://github.com/linmu115/maintain-project-map/actions/workflows/project-map-pages.yml) 与对应部署中核查；本机生成成功本身不作为网站已上线的证据。
 
 首次线上实测：提交 `58c27c7` 的 [构建与部署](https://github.com/linmu115/maintain-project-map/actions/runs/35433170806) 成功。浏览器实际打开 Pages 首页，验证在线发布文档跳转与返回、架构图渲染、旧 ID 的短定位和独立归档原文，以及任务历程的本机证据提示；页面没有要求读者启动本地服务。
+
+最后补查路径脱敏仅作用于路径元数据，不能把 `/api` 开头的正文或源码注释当作绝对文件路径；4 项公共导出检查通过。

@@ -9,6 +9,17 @@ from render_map import export_reader
 
 
 class PublicExportTests(unittest.TestCase):
+    def test_publication_keeps_slash_prefixed_prose_and_code(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            data = fixture(root)
+            data["records"][0]["body"] = "/api is a documented route."
+            data["records"][0]["source_text"] = "/* a source comment */\nfunction main() {}"
+            export_reader(data, root / "site/index.html", diagrams=False, public_root=root)
+            payload = json.loads((root / "site/docs.json").read_text(encoding="utf-8"))
+            for key in ("body", "source_text"):
+                self.assertEqual(payload["records"][0][key], data["records"][0][key])
+
     def test_public_history_never_reads_capture_and_keeps_narrative(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
