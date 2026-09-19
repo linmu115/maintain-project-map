@@ -19,3 +19,5 @@ relations:
 待提交 Git tree 解包到独立临时目录后，使用原发布命令重新构建成功：80 条记录结构有效，两张图均生成，旧实现归档页存在，来源基线没有出现换行造成的待复核；没有事件目录。143 个 Skill 分发文件与本机安装版逐一校验一致，两份自身地图继续沿用既有位置和项目 ID。
 
 远程发布结果在 [GitHub Actions](https://github.com/linmu115/maintain-project-map/actions/workflows/project-map-pages.yml) 与对应部署中核查；本机生成成功本身不作为网站已上线的证据。
+
+首次线上实测：提交 `58c27c7` 的 [构建与部署](https://github.com/linmu115/maintain-project-map/actions/runs/35433170806) 成功。浏览器实际打开 Pages 首页，验证在线发布文档跳转与返回、架构图渲染、旧 ID 的短定位和独立归档原文，以及任务历程的本机证据提示；页面没有要求读者启动本地服务。
